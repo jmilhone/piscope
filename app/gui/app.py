@@ -98,7 +98,10 @@ class MyWindow(QtWidgets.QWidget):
         self.threadpool.start(worker)
 
     def handle_mdsplus_data(self, data):
-        t, cathode_current, cathode_voltage, anode_current = data
+        # SO SO TERRIBLE!
+        t, cathode_current, cathode_voltage, anode_current, total_power, total_cathode_current, total_anode_current = data[0:7]
+        tt, ne, te, vf = data[7:11]
+
         print(t.shape)
         print(cathode_current.keys())
         axs = self.axs
@@ -110,13 +113,16 @@ class MyWindow(QtWidgets.QWidget):
 
         # Step 2 plot the data
         cathode_axs = [axs[2][0], axs[2][1], axs[2][2]]
+        probe_axs = [axs[0][0], axs[1][0], axs[1][1]]
         discharge_plotting.plot_discharge(cathode_axs, t, cathode_voltage, cathode_current, anode_current)
+        discharge_plotting.plot_probes(probe_axs, tt, ne, te, vf)
+        discharge_plotting.plot_power(axs[0][2], t, total_power)
+        discharge_plotting.plot_total_current(axs[1][2], t, total_cathode_current, total_anode_current)
         self.figure.suptitle("Shot {0:d}".format(self.shot_number))
         self.figure.tight_layout()
         # Step 3 draw the canvas
         self.canvas.draw()
         self.status.setText("Idle")
-
 
 
 
