@@ -1,7 +1,5 @@
 import MDSplus as mds
 import node_names
-# import time
-# import matplotlib.pyplot as plt
 
 
 def retrieve_cathode_data(wipal_tree, n_cathodes=12, npts=100):
@@ -22,6 +20,19 @@ def retrieve_anode_data(wipal_tree, n_anodes=20, npts=100):
     t, anode_current = _retrieve_data(wipal_tree, anodes, anode_node_paths, npts=npts)
 
     return t, anode_current
+
+
+def retrieve_triple_probe_data(wipal_tree, n_probes=5, npts=100):
+    probes = range(1, n_probes+1)
+    te_node_paths = node_names.mach_triple_te_node_locations(n_probes=n_probes)
+    ne_node_paths = node_names.mach_triple_ne_node_locations(n_probes=n_probes)
+    vf_node_paths = node_names.mach_triple_vf_node_locations(n_probes=n_probes)
+
+    t, te = _retrieve_data(wipal_tree, probes, te_node_paths, npts=npts)
+    _, ne = _retrieve_data(wipal_tree, probes, ne_node_paths, npts=npts)
+    _, vf = _retrieve_data(wipal_tree, probes, vf_node_paths, npts=npts)
+
+    return t, te, ne, vf
 
 
 def retrieve_all_data(shot_number, n_anodes=20, n_cathodes=12, npts=100):
@@ -45,31 +56,5 @@ def _retrieve_data(tree, labels, paths, npts=100):
         except mds.TreeNODATA, e:
             pass
     return t, data
-
-
-# if __name__ == "__main__":
-#     shot_number = 29374
-#     wipal_tree = mds.Tree("wipal", shot_number)
-#     t, cathode_current, cathode_voltage = retrieve_cathode_data(wipal_tree, npts=100)
-#     _, anode_current = retrieve_anode_data(wipal_tree, npts=100)
-#     keys = cathode_current.keys()
-
-    # fig, ax = plt.subplots(3)
-    # for cath in cathode_voltage:
-    #     ax[0].plot(t, cathode_voltage[cath], label="{0:d}".format(cath))
-    # for cath in cathode_current:
-    #     ax[1].plot(t, cathode_current[cath], label="{0:d}".format(cath))
-    # for anode in anode_current:
-    #     ax[2].plot(t, anode_current[anode], label="{0:d}".format(anode))
-    # lg0 = ax[0].legend(frameon=False)
-    # lg1 = ax[1].legend(frameon=False)
-    # lg2 = ax[2].legend(frameon=False)
-    # if lg0:
-    #     lg0.draggable()
-    # if lg1:
-    #     lg1.draggable()
-    # if lg2:
-    #     lg2.draggable()
-    # plt.show()
 
 
