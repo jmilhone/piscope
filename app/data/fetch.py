@@ -1,6 +1,6 @@
 import MDSplus as mds
 import node_names
-
+import numpy as np
 
 def retrieve_cathode_data(wipal_tree, n_cathodes=12, npts=100):
     cathodes = range(1, n_cathodes+1)
@@ -12,11 +12,13 @@ def retrieve_cathode_data(wipal_tree, n_cathodes=12, npts=100):
     _, cathode_voltage = _retrieve_data(wipal_tree, cathodes, voltage_node_paths, npts=npts)
     _, cathode_power = _retrieve_data(wipal_tree, cathodes, power_node_paths, npts=npts)
 
-    total_power = 0.0
-    total_current = 0.0
-    for cath in cathode_power:
-        total_power += cathode_power[cath]
-        total_current += cathode_current[cath]
+    #total_power = 0.0
+    #total_current = 0.0
+    #for cath in cathode_power:
+    #    total_power += cathode_power[cath]
+    #    total_current += cathode_current[cath]
+    total_power = wipal_tree.getNode("\\cathode_power_tot").data()[::npts]
+    total_current = wipal_tree.getNode("\\cathode_current_tot").data()[::npts]
 
     return t, cathode_current, cathode_voltage, total_power, total_current
 
@@ -27,10 +29,10 @@ def retrieve_anode_data(wipal_tree, n_anodes=20, npts=100):
 
     t, anode_current = _retrieve_data(wipal_tree, anodes, anode_node_paths, npts=npts)
 
-    total_current = 0.0
-    for anode in anode_current:
-        total_current -= anode_current[anode]
-
+    #total_current = 0.0
+    #for anode in anode_current:
+    #    total_current -= anode_current[anode]
+    total_current = wipal_tree.getNode("\\anode_current_tot").data()[::npts]*-1
     return t, anode_current, total_current
 
 
@@ -43,18 +45,36 @@ def retrieve_triple_probe_data(wipal_tree, n_probes=5, npts=100):
     t, te = _retrieve_data(wipal_tree, probes, te_node_paths, npts=npts)
     _, ne = _retrieve_data(wipal_tree, probes, ne_node_paths, npts=npts)
     _, vf = _retrieve_data(wipal_tree, probes, vf_node_paths, npts=npts)
-
+    # clean ne here
+    for probe in ne:
+        ne[probe][np.isnan(ne[probe])] = 0.0
     return t, ne, te, vf
 
 
 def retrieve_all_data(shot_number, n_anodes=20, n_cathodes=12, n_probes=5, npts=100):
     tree = mds.Tree("wipal", shot_number)
-
+    print tree
     t, cathode_current, cathode_voltage, total_power, total_cathode_current = retrieve_cathode_data(tree, n_cathodes=n_cathodes, npts=npts)
     _, anode_current, total_anode_current = retrieve_anode_data(tree, npts=npts, n_anodes=n_anodes)
     tt, te, ne, vf = retrieve_triple_probe_data(tree, n_probes=n_probes, npts=npts)
-    return t, cathode_current, cathode_voltage, anode_current, total_power, total_cathode_current, total_anode_current, tt, te, ne, vf
 
+    t_mm, ne_mm = retrieve_interferometer_data(shot_number)
+
+    return t, cathode_current, cathode_voltage, anode_current, total_power, total_cathode_current, total_anode_current, tt, te, ne, vf, t_mm, ne_mm
+
+def retrieve_interferometer_data(shot_number):
+
+    #try:
+    proc_tree = mds.Tree("mpdx_proc", shot_number)
+    #except
+    
+    try:
+        node = proc_tree.getNode("\\dens_interf")
+        t = node.dim_of().data()
+        ne = node.data()
+        return t, ne
+    except mds.TreeNODATA, e:
+        return None, None
 
 def _retrieve_data(tree, labels, paths, npts=100):
     data = {}

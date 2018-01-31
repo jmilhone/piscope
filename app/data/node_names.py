@@ -22,8 +22,7 @@ def mach_triple_te_node_locations(n_probes=5):
 
 
 def mach_triple_ne_node_locations(n_probes=5):
-    print("changed to isat until I make a shot with the ne TDI expression...oops")
-    return ["kinetics.mach_triple.probe_{0:d}.tp.isat".format(x+1) for x in range(n_probes)]
+    return ["kinetics.mach_triple.probe_{0:d}.tp.ne".format(x+1) for x in range(n_probes)]
 
 
 def mach_triple_vf_node_locations(n_probes=5):

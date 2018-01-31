@@ -19,7 +19,7 @@ class MyWindow(QtWidgets.QWidget):
         super(MyWindow, self).__init__()
         self.setWindowTitle("Big Red Ball PyScope")
         self.threadpool = QtCore.QThreadPool()  # This is where the grabbing of data will take place to not lock the gui
-
+        self.mdsevent_threadpool = QtCore.QThreadPool()
         # Shot Number Spin Box
         self.spinBox = QtWidgets.QSpinBox(self)
         self.spinBox.setRange(0, 999999)
@@ -67,9 +67,7 @@ class MyWindow(QtWidgets.QWidget):
         self.updateBtn.clicked.connect(self.update_pressed)
         self.autoUpdate.stateChanged.connect(self.timer_start_stop)
 
-        self.axs[0][0].plot([0, 1, 2], [1, -1, 3], '-or')
-        self.canvas.draw()
-
+        self.fetch_data(self.shot_number)
         self.show()
 
     def timer_start_stop(self, state):
@@ -77,31 +75,55 @@ class MyWindow(QtWidgets.QWidget):
             self.timer.start()
         else:
             self.timer.stop()
+    
+    def wait_for_mds_event(self, name, timeout):
+        try:
+            #print("starting to wait")
+            shot_number = mds.Event.wfevent(name, timeout)
+            return int(shot_number)
+        except mds.MdsTimeout, e:
+            #print("timed out")
+            return None
 
     def process_timeout(self):
+        #worker = Worker(self.wait_for_mds_event, "raw_data_ready", 1)
+        #worker.signals.result.connect(self.handle_mds_event)
+        #self.mdsevent_threadpool.start(worker)
+
         try:
             shot_number = mds.Event.wfevent("raw_data_ready", 1)
             shot_number = int(shot_number)
             self.fetch_data(shot_number)
         except mds.MdsTimeout, e:
-            # Moving on, no event yet
             pass
+            #print("timed out")
+            # Moving on, no event yet
+
+    def handle_mds_event(self, shot_number):
+        if shot_number:
+            self.shot_number = shot_number
+            self.spinBox.setValue(self.shot_number)
+            self.fetch_data(shot_number)
 
     def update_pressed(self):
         shot_number = self.spinBox.value()
+        self.shot_number = shot_number
         self.fetch_data(shot_number)
 
     def fetch_data(self, shot_number):
-        self.status.setText("Processing Shot {0:d}".format(shot_number))
+        self.status.setText("Retrieving Data from Shot {0:d}".format(shot_number))
         worker = Worker(fetch.retrieve_all_data, shot_number, n_anodes=20, n_cathodes=12, npts=100)
         worker.signals.result.connect(self.handle_mdsplus_data)
         self.threadpool.start(worker)
 
     def handle_mdsplus_data(self, data):
         # SO SO TERRIBLE!
+        self.status.setText("Plotting Data from Shot {0:d}".format(self.shot_number))
         t, cathode_current, cathode_voltage, anode_current, total_power, total_cathode_current, total_anode_current = data[0:7]
+        print(anode_current.keys())
         tt, ne, te, vf = data[7:11]
-
+        print(ne)
+        t_mm, ne_mm = data[11:13]
         print(t.shape)
         print(cathode_current.keys())
         axs = self.axs
@@ -118,6 +140,8 @@ class MyWindow(QtWidgets.QWidget):
         discharge_plotting.plot_probes(probe_axs, tt, ne, te, vf)
         discharge_plotting.plot_power(axs[0][2], t, total_power)
         discharge_plotting.plot_total_current(axs[1][2], t, total_cathode_current, total_anode_current)
+        if t_mm is not None and ne_mm is not None:
+            discharge_plotting.plot_density(axs[0][1], t_mm, ne_mm)
         self.figure.suptitle("Shot {0:d}".format(self.shot_number))
         self.figure.tight_layout()
         # Step 3 draw the canvas

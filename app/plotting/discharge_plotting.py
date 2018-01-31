@@ -78,3 +78,6 @@ def plot_total_current(ax, time, cathode_current, anode_current):
     if lg:
         lg.draggable()
 
+def plot_density(ax, t_mm, ne_mm):
+    ax.plot(t_mm, ne_mm, label="mm wave")
+    ax.set_xlabel(r"(m${}^{-3}$)")
