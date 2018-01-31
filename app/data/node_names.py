@@ -1,7 +1,12 @@
+from __future__ import print_function
 
 
 def cathode_current_node_locations(n_cathodes=12):
     return ["discharge.cathodes.cathode_{0:02d}.current".format(x+1) for x in range(n_cathodes)]
+
+
+def cathode_power_node_locations(n_cathodes=12):
+    return ["discharge.cathodes.cathode_{0:02d}.power".format(x+1) for x in range(n_cathodes)]
 
 
 def cathode_voltage_node_locations(n_cathodes=12):
@@ -17,7 +22,8 @@ def mach_triple_te_node_locations(n_probes=5):
 
 
 def mach_triple_ne_node_locations(n_probes=5):
-    return ["kinetics.mach_triple.probe_{0:d}.tp.ne".format(x+1) for x in range(n_probes)]
+    print("changed to isat until I make a shot with the ne TDI expression...oops")
+    return ["kinetics.mach_triple.probe_{0:d}.tp.isat".format(x+1) for x in range(n_probes)]
 
 
 def mach_triple_vf_node_locations(n_probes=5):
