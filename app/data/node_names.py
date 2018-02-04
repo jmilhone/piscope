@@ -27,3 +27,10 @@ def mach_triple_ne_node_locations(n_probes=5):
 
 def mach_triple_vf_node_locations(n_probes=5):
     return ["kinetics.mach_triple.probe_{0:d}.tp.vfloat".format(x+1) for x in range(n_probes)]
+
+def magnetron_forward_node_locations(n_mag=2):
+    return ["discharge.magnetrons.magnetron_{0:d}.forward".format(x+1) for x in range(n_mag)]
+
+def magnetron_reflected_node_locations(n_mag=2):
+    return ["discharge.magnetrons.magnetron_{0:d}.reflected".format(x+1) for x in range(n_mag)]
+

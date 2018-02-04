@@ -1,4 +1,5 @@
 from __future__ import division, print_function
+import readline
 from PyQt5 import QtCore, QtWidgets
 from matplotlib import rcParams
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -93,6 +94,8 @@ class MyWindow(QtWidgets.QWidget):
         try:
             shot_number = mds.Event.wfevent("raw_data_ready", 1)
             shot_number = int(shot_number)
+            self.shot_number = shot_number
+            self.spinBox.setValue(self.shot_number)
             self.fetch_data(shot_number)
         except mds.MdsTimeout, e:
             pass
@@ -112,7 +115,7 @@ class MyWindow(QtWidgets.QWidget):
 
     def fetch_data(self, shot_number):
         self.status.setText("Retrieving Data from Shot {0:d}".format(shot_number))
-        worker = Worker(fetch.retrieve_all_data, shot_number, n_anodes=20, n_cathodes=12, npts=100)
+        worker = Worker(fetch.retrieve_all_data, shot_number, n_anodes=20, n_cathodes=12, npts=10)
         worker.signals.result.connect(self.handle_mdsplus_data)
         self.threadpool.start(worker)
 
@@ -125,6 +128,7 @@ class MyWindow(QtWidgets.QWidget):
         print(ne)
         t_mm, ne_mm = data[11:13]
         print(t.shape)
+        t_mag, forward, reflected = data[13:16]
         print(cathode_current.keys())
         axs = self.axs
 
@@ -138,7 +142,7 @@ class MyWindow(QtWidgets.QWidget):
         probe_axs = [axs[0][0], axs[1][0], axs[1][1]]
         discharge_plotting.plot_discharge(cathode_axs, t, cathode_voltage, cathode_current, anode_current)
         discharge_plotting.plot_probes(probe_axs, tt, ne, te, vf)
-        discharge_plotting.plot_power(axs[0][2], t, total_power)
+        discharge_plotting.plot_power(axs[0][2], t, total_power, t_mag, forward, reflected)
         discharge_plotting.plot_total_current(axs[1][2], t, total_cathode_current, total_anode_current)
         if t_mm is not None and ne_mm is not None:
             discharge_plotting.plot_density(axs[0][1], t_mm, ne_mm)

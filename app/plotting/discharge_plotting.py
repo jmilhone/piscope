@@ -66,11 +66,18 @@ def plot_probes(axs, time, ne, te, vf):
     axs[2].set_ylabel(r"$V_f$ (V)")
 
 
-def plot_power(ax, time, cathode_power):
-    ax.plot(time, cathode_power, label="Cathodes")
+def plot_power(ax, time, cathode_power, t_mag, forward, reflected):
+    ax.plot(time, cathode_power/1000.0, label="Cathodes")
     ax.set_ylabel("Power (kW)")
 
+    for mag in forward:
+        ax.plot(t_mag, forward[mag]/1000.0, label="{0:d} F".format(mag))
+    for mag in reflected:
+        ax.plot(t_mag, reflected[mag]/1000.0, label="{0:d} R".format(mag))
 
+    lg = ax.legend()
+    if lg:
+        lg.draggable()
 def plot_total_current(ax, time, cathode_current, anode_current):
     ax.plot(time, cathode_current, label="Cathodes")
     ax.plot(time, anode_current, label="Anodes")
