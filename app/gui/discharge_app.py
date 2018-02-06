@@ -112,7 +112,7 @@ class MyWindow(QtWidgets.QWidget):
 
     def fetch_data(self, shot_number):
         self.status.setText("Retrieving Data from Shot {0:d}".format(shot_number))
-        worker = Worker(fetch.retrieve_all_data, shot_number, n_anodes=20, n_cathodes=12, npts=100)
+        worker = Worker(fetch.retrieve_discharge_data, shot_number, n_anodes=20, n_cathodes=12, npts=100)
         worker.signals.result.connect(self.handle_mdsplus_data)
         self.threadpool.start(worker)
 
@@ -120,12 +120,8 @@ class MyWindow(QtWidgets.QWidget):
         # SO SO TERRIBLE!
         self.status.setText("Plotting Data from Shot {0:d}".format(self.shot_number))
         t, cathode_current, cathode_voltage, anode_current, total_power, total_cathode_current, total_anode_current = data[0:7]
-        print(anode_current.keys())
         tt, ne, te, vf = data[7:11]
-        print(ne)
         t_mm, ne_mm = data[11:13]
-        print(t.shape)
-        print(cathode_current.keys())
         axs = self.axs
 
         # Step 1 clear axes

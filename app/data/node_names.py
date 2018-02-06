@@ -27,3 +27,20 @@ def mach_triple_ne_node_locations(n_probes=5):
 
 def mach_triple_vf_node_locations(n_probes=5):
     return ["kinetics.mach_triple.probe_{0:d}.tp.vfloat".format(x+1) for x in range(n_probes)]
+
+
+def mach_triple_mach_node_locations(mp, n_probes=5):
+    if mp not in ["mp1", "mp2"]:
+        return []
+    return ["kinetics.mach_triple.probe_{0:d}.mp.{1:s}.mach".format(x+1, mp) for x in range(n_probes)]
+
+
+def mach_triple_current_node_locations(mp, face, n_probes=5):
+    if mp not in ["mp1", "mp2"]:
+        return []
+    if face not in ["A", "B"]:
+        return []
+    return ["kinetics.mach_triple.probe_{0:d}.mp.{1:s}.{2:s}.current".format(x+1, mp, face) for x in range(n_probes)]
+
+def ring_anode_node_locations(n_anodes=2):
+    return ["discharge.anodes.ring_{0:02d}.current".format(x+1) for x in range(n_anodes)]
