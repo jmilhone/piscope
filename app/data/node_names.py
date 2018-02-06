@@ -44,3 +44,10 @@ def mach_triple_current_node_locations(mp, face, n_probes=5):
 
 def ring_anode_node_locations(n_anodes=2):
     return ["discharge.anodes.ring_{0:02d}.current".format(x+1) for x in range(n_anodes)]
+
+def magnetron_forward_node_locations(n_mag=2):
+    return ["discharge.magnetrons.magnetron_{0:d}.forward".format(x+1) for x in range(n_mag)]
+
+def magnetron_reflected_node_locations(n_mag=2):
+    return ["discharge.magnetrons.magnetron_{0:d}.reflected".format(x+1) for x in range(n_mag)]
+
