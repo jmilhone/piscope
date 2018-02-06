@@ -45,18 +45,14 @@ def retrieve_triple_probe_data(wipal_tree, n_probes=5, npts=100):
     t, te = _retrieve_data(wipal_tree, probes, te_node_paths, npts=npts)
     _, ne = _retrieve_data(wipal_tree, probes, ne_node_paths, npts=npts)
     _, vf = _retrieve_data(wipal_tree, probes, vf_node_paths, npts=npts)
-    print len(te)
     # clean ne here
     for probe in ne:
         ne[probe][np.isnan(ne[probe])] = 0.0
     return t, ne, te, vf
 
 
-def retrieve_discharge_data(shot_number, n_anodes=20, n_cathodes=12, n_probes=5, npts=100):
-    tree = mds.Tree("wipal", shot_number)
-    #print tree
 
-def retrieve_all_data(shot_number, n_anodes=20, n_cathodes=12, n_probes=5, npts=100, n_mag=2):
+def retrieve_discharge_data(shot_number, n_anodes=20, n_cathodes=12, n_probes=5, npts=100, n_mag=2):
     tree = mds.Tree("wipal", shot_number)
     t, cathode_current, cathode_voltage, total_power, total_cathode_current = retrieve_cathode_data(tree, n_cathodes=n_cathodes, npts=npts)
     _, anode_current, total_anode_current = retrieve_anode_data(tree, npts=npts, n_anodes=n_anodes)
@@ -73,7 +69,7 @@ def retrieve_interferometer_data(shot_number):
     try:
         proc_tree = mds.Tree("mpdx_proc", shot_number)
     except mds.TreeFOPENR, e:
-        print e
+        print(e)
         return None, None 
 
     try:
@@ -82,7 +78,7 @@ def retrieve_interferometer_data(shot_number):
         ne = node.data()
         return t, ne
     except mds.TreeNODATA, e:
-        print e
+        print(e)
         return None, None
 
 
