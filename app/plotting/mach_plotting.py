@@ -12,8 +12,9 @@ def plot_mach_number(axs, time, mp1_mach, mp2_mach):
     for j, mp1, mp2 in zip(range(i), mp1_keys, mp2_keys):
         axs[j].plot(time, mp1_mach[mp1], label="1")
         axs[j].plot(time, mp2_mach[mp2], label="2")
+        axs[j].set_ylim(-0.5, 0.5)
     lg = axs[0].legend(frameon=False)
-
+    
     if lg:
         lg.draggable()
     axs[-1].set_ylabel("Time (s)")
@@ -38,6 +39,6 @@ def plot_currents(axs, time, faceA, faceB):
     if lg:
         lg.draggable()
 
-    for ax in axs:
-        ax.set_ylabel("mA")
+    for key, ax in zip(A_keys, axs):
+        ax.set_ylabel("mA, Probe {}".format(key))
     axs[-1].set_xlabel("Time (s)")

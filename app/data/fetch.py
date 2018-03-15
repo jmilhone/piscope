@@ -1,4 +1,5 @@
 from __future__ import print_function
+import readline
 import MDSplus as mds
 import node_names
 import numpy as np
@@ -14,9 +15,15 @@ def retrieve_cathode_data(wipal_tree, n_cathodes=12, npts=100):
     _, cathode_voltage = _retrieve_data(wipal_tree, cathodes, voltage_node_paths, npts=npts)
     _, cathode_power = _retrieve_data(wipal_tree, cathodes, power_node_paths, npts=npts)
 
-    total_power = wipal_tree.getNode("\\cathode_power_tot").data()[::npts]
-    total_current = wipal_tree.getNode("\\cathode_current_tot").data()[::npts]
-
+    try:
+        total_power = wipal_tree.getNode("\\cathode_power_tot").data()[::npts]
+        total_current = wipal_tree.getNode("\\cathode_current_tot").data()[::npts]
+    except mds.TreeNODATA, e:
+        total_power = None
+        total_current = None
+    except IndexError, ie:
+        total_power = None
+        total_current = None
     return t, cathode_current, cathode_voltage, total_power, total_current
 
 
@@ -32,7 +39,13 @@ def retrieve_anode_data(wipal_tree, n_anodes=20, npts=100):
     # append ring current data to anode dictionary
     for x in ring_current:
         anode_current[x] = ring_current[x]
-    total_current = wipal_tree.getNode("\\anode_current_tot").data()[::npts]*-1
+    try:
+        total_current = wipal_tree.getNode("\\anode_current_tot").data()[::npts]*-1
+    except mds.TreeNODATA, e:
+        total_current = None
+    except IndexError, ie:
+        total_current = None
+
     return t, anode_current, total_current
 
 
@@ -59,13 +72,30 @@ def retrieve_discharge_data(shot_number, n_anodes=20, n_cathodes=12, n_probes=5,
     tt, te, ne, vf = retrieve_triple_probe_data(tree, n_probes=n_probes, npts=npts)
     t_mag, forward, reflected = retrieve_magnetron_data(tree, n_mag=n_mag, npts=npts)
     t_mm, ne_mm = retrieve_interferometer_data(shot_number)
+    t_nn, nn = retrieve_ccg_data(shot_number)
 
     return t, cathode_current, cathode_voltage, anode_current, total_power, total_cathode_current, total_anode_current, tt, te, ne, vf, t_mm, ne_mm, \
-            t_mag, forward, reflected
+            t_mag, forward, reflected, t_nn, nn
+
+def retrieve_ccg_data(shot_number):
+    try:
+        proc_tree = mds.Tree("mpdx_proc", shot_number)
+
+    except mds.TreeFOPENR, e:
+        print(e)
+        return None, None
+    
+    try:
+        node = proc_tree.getNode("\\ndens_ccg1")
+        t = node.dim_of().data()
+        nn = node.data()
+        return t, nn
+    except mds.TreeNODATA, e:
+        print(e)
+        return None, None
 
 def retrieve_interferometer_data(shot_number):
 
-    proc_tree = mds.Tree("mpdx_proc", shot_number)
     try:
         proc_tree = mds.Tree("mpdx_proc", shot_number)
     except mds.TreeFOPENR, e:
@@ -135,6 +165,91 @@ def retrieve_magnetron_data(wipal_tree, n_mag=2, npts=100):
     _, reflected = _retrieve_data(wipal_tree, mags, reflected_paths, npts=npts)
 
     return t, forward, reflected
+
+
+def retrieve_gun_data(shot_number, nguns=19, npts=100):
+    wipal_tree = mds.Tree("wipal", shot_number)
+    Iarc_tags = ["\\gun_{0:02d}_i_arc".format(x) for x in range(1, 20)]
+    Varc_tags = ["\\gun_{0:02d}_v_arc".format(x) for x in range(1, 20)]
+    Ibias_tags = ["\\gun_{0:02d}_i_bias".format(x) for x in range(1, 20)]
+    Vbias_tags = ["\\gun_{0:02d}_v_bias".format(x) for x in range(1, 20)]
+
+    labels = range(1, nguns+1)
+
+    t, Iarc = _retrieve_data(wipal_tree, labels, Iarc_tags, npts=npts)
+    _, Varc = _retrieve_data(wipal_tree, labels, Varc_tags, npts=npts)
+    _, Ibias = _retrieve_data(wipal_tree, labels, Ibias_tags, npts=npts)
+    _, Vbias = _retrieve_data(wipal_tree, labels, Vbias_tags, npts=npts)
+
+    valid_guns = np.zeros(nguns)
+    for bias in Iarc:
+        if np.mean(Iarc[bias]) > 100:
+            valid_guns[bias-1] = 1.0
+
+    try:
+        node = wipal_tree.getNode("\\guns_locs")
+        locs = node.getData().data()
+    except mds.TreeNODATA, e:
+        pass
+
+    total = gun_totals(wipal_tree, npts=npts)
+
+    Iarc_tot = total['I_arc_tot']
+    Ibias_tot = total['I_bias_tot']
+    Parc_tot = total['P_arc_tot']
+    Pbias_tot = total['P_bias_tot']
+
+    gun_data = {'t': t, "Iarc": Iarc, "Varc": Varc, "Ibias": Ibias, "Vbias": Vbias, "locs": locs,
+            "Iarc_tot": Iarc_tot, "Ibias_tot": Ibias_tot, "Parc_tot": Parc_tot, "Pbias_tot": Pbias_tot, 
+            "valid_guns": valid_guns}
+
+    return gun_data
+
+
+def gun_totals(wipal_tree, npts=100):
+    labels = ["I_arc_tot", "I_bias_tot", "P_arc_tot", "P_bias_tot"]
+    paths = ["\\guns_" + s for s in labels]
+
+    _, data = _retrieve_data(wipal_tree, labels, paths, npts=npts)
+
+    return data
+
+def retrieve_linear_hall(shot_number, magnetics_tree, binned=False):
+    wipal_tree = mds.Tree("wipal", shot_number)
+
+    try:
+        node_name = "\\linear_hall{0}_bx".format(magnetics_tree)
+        if binned:
+            node_name += "_binned"
+        bx = wipal_tree.getNode(node_name).data()*10000.0
+        t = wipal_tree.getNode(node_name).dim_of().data()
+    except mds.TreeNODATA, e:
+        bx = None
+
+    try:
+        node_name = "\\linear_hall{0}_by".format(magnetics_tree)
+        if binned:
+            node_name += "_binned"
+        by = wipal_tree.getNode(node_name).data()*10000.0
+    except mds.TreeNODATA, e:
+        by = None
+
+    try:
+        node_name = "\\linear_hall{0}_bz".format(magnetics_tree)
+        if binned:
+            node_name += "_binned"
+        bz = wipal_tree.getNode(node_name).data()*10000.0
+    except mds.TreeNODATA, e:
+        bz = None
+
+    try:
+        node_name = "\\linear_hall3_locs"
+        locs = wipal_tree.getNode(node_name).data()
+    except mds.TreeNODATA, e:
+        locs = None
+    bdata = {'t': t, 'bx': bx, 'by':by, 'bz':bz, 'locs': locs}
+
+    return bdata
 
 
 def _retrieve_data(tree, labels, paths, npts=100):

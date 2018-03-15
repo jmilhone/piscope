@@ -11,7 +11,7 @@ def plot_discharge(axs, time, cathode_voltage, cathode_current, anode_current):
         axs[1].plot(time, cathode_current[cath], label="{0:d}".format(cath))
 
     for anode in anode_current:
-        axs[2].plot(time, anode_current[anode], label="{0:d}".format(anode))
+        axs[2].plot(time, anode_current[anode], label="{0}".format(anode))
 
     lg0 = axs[0].legend(frameon=False)
     # lg1 = axs[1].legend(frameon=False)
@@ -67,7 +67,8 @@ def plot_probes(axs, time, ne, te, vf):
 
 
 def plot_power(ax, time, cathode_power, t_mag, forward, reflected):
-    ax.plot(time, cathode_power/1000.0, label="Cathodes")
+    if cathode_power is not None:
+        ax.plot(time, cathode_power/1000.0, label="Cathodes")
     ax.set_ylabel("Power (kW)")
 
     for mag in forward:
@@ -88,3 +89,19 @@ def plot_total_current(ax, time, cathode_current, anode_current):
 def plot_density(ax, t_mm, ne_mm):
     ax.plot(t_mm, ne_mm, label="mm wave")
     ax.set_xlabel(r"(m${}^{-3}$)")
+
+def plot_neutral_density(ax, t, nn):
+    ax.plot(t, nn, label=r"$n_n$")
+    lg = ax.legend()
+    if lg:
+        lg.draggable()
+
+def plot_cathode_hemisphere_currents(ax, time, currents, north_cathodes, south_cathodes):
+    north_current = 0.0
+    south_current = 0.0
+    for cath in north_cathodes:
+        north_current += currents[cath]
+    for cath in south_cathodes:
+        south_current += currents[cath]
+    ax.plot(time, north_current, label="N")
+    ax.plot(time, south_current, label="S")

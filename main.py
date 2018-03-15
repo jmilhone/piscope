@@ -7,16 +7,28 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run a PiScope for the Big Red Ball.")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-d", "--discharge", action="store_true")
+    group.add_argument("-g", "--gun", action="store_true")
     group.add_argument("-m", "--mach", action="store_true")
+    group.add_argument("-b", "--magnetics", action="store_true")
+    parser.add_argument("--hall", nargs='?', default=3, type=int, help="Hall probe array number, default is 3")
     args = parser.parse_args()
 
     if args.mach:
         print("Running mach")
         import app.gui.mach_app as MyApp
+    elif args.gun:
+        print("Running guns")
+        import app.gui.gun_app as MyApp
+    elif args.magnetics:
+        print("Running magnetics")
+        import app.gui.magnetics_app as MyApp
     else:
         print("Running discharge")
         import app.gui.discharge_app as MyApp
 
     myapp = QApplication([])
-    window = MyApp.MyWindow()
+    if args.magnetics:
+        window = MyApp.MyWindow(args.hall)
+    else:
+        window=MyApp.MyWindow()
     myapp.exec_()
