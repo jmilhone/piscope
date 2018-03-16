@@ -25,18 +25,19 @@ class MyWindow(QtWidgets.QWidget):
         self.shot_number = self.spinBox.value()
         self.hall = hall
 
-        self.mds_update_event = events.MyEvent("mag_data_ready")
-        self.mds_update_event.sender.emitter.connect(self.fetch_data)
+        self.mds_update_event = None
+        #self.mds_update_event = events.MyEvent("mag_data_ready")
+        #self.mds_update_event.sender.emitter.connect(self.fetch_data)
         #self.mds_update_event.join()
 
         # Share x axis check box
-        #self.shareX = QtWidgets.QCheckBox("Share X-Axis", self)
+        self.shareX = QtWidgets.QCheckBox("Share X-Axis", self)
 
         # Binned data check box
         self.binned = QtWidgets.QCheckBox("Binned?", self)
 
         # Auto Update Shot Number check box
-        #self.autoUpdate = QtWidgets.QCheckBox("Auto Update", self)
+        self.autoUpdate = QtWidgets.QCheckBox("Auto Update", self)
 
         # Update Plot Button
         self.updateBtn = QtWidgets.QPushButton("Update", self)
@@ -49,9 +50,10 @@ class MyWindow(QtWidgets.QWidget):
 
         self.spinBox.setFont(self.font)
         self.binned.setFont(self.font)
-        #self.autoUpdate.setFont(self.font)
+        self.autoUpdate.setFont(self.font)
         self.updateBtn.setFont(self.font)
         self.status.setFont(self.font)
+        self.shareX.setFont(self.font)
 
 
         # Create matplotlib figures here
@@ -63,8 +65,8 @@ class MyWindow(QtWidgets.QWidget):
         self.hbox = QtWidgets.QHBoxLayout()
         self.hbox.addWidget(self.spinBox)
         self.hbox.addWidget(self.binned)
-        #self.hbox.addWidget(self.shareX)
-        #self.hbox.addWidget(self.autoUpdate)
+        self.hbox.addWidget(self.shareX)
+        self.hbox.addWidget(self.autoUpdate)
         self.hbox.addWidget(self.updateBtn)
         self.hbox.addWidget(self.status)
         self.hbox.addStretch(1)
@@ -82,8 +84,9 @@ class MyWindow(QtWidgets.QWidget):
         # Set up connections for the widgets
         #self.timer.timeout.connect(self.process_timeout)
         self.updateBtn.clicked.connect(self.update_pressed)
-        #self.autoUpdate.stateChanged.connect(self.timer_start_stop)
+        self.autoUpdate.stateChanged.connect(self.change_auto_update)
         self.binned.stateChanged.connect(self.update_pressed)
+        self.shareX.stateChanged.connect(self.change_sharex)
 
         # This is not needed, but I added it for Vader2
         self.setGeometry(100, 1200, 1200, 1200)
@@ -92,6 +95,29 @@ class MyWindow(QtWidgets.QWidget):
         # run the initial data grab
         self.fetch_data(self.shot_number)
 
+    def change_auto_update(self, state):
+        if state == QtCore.Qt.Checked:
+            if self.mds_update_event is None:
+                self.mds_update_event = events.MyEvent("mag_data_ready")
+                self.mds_update_event.sender.emitter.connect(self.fetch_data)
+        else:
+            if self.mds_update_event is not None and self.mds_update_event.isAlive():
+                self.mds_update_event.cancel()
+                self.mds_update_event = None
+
+    def change_sharex(self, state):
+        axs = self.axs
+        ax0 = axs[1][0]
+        if state == QtCore.Qt.Checked:
+            for ax in axs:
+                for a in ax:
+                    if a != axs[0][0]:
+                        a.get_shared_x_axes().join(a, ax0)
+        else:
+            for ax in axs:
+                for a in ax:
+                    if a != axs[0][0]:
+                        ax0.get_shared_x_axes().remove(a)
 
     #def timer_start_stop(self, state):
     #    if state == QtCore.Qt.Checked:
@@ -157,6 +183,8 @@ class MyWindow(QtWidgets.QWidget):
         self.figure.tight_layout()
 
         # Step 3 draw the canvas
+        self.toolbar.update()
+        self.toolbar.push_current()
         self.canvas.draw()
         self.status.setText("Idle")
 

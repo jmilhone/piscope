@@ -78,3 +78,19 @@ def plot_locs(ax, locs, valid):
     for idx, v in enumerate(valid):
         if v:
             ax.plot(x[idx], y[idx], 'o', color=colors[idx])
+
+def plot_bdot(axs, spiral_data):
+    axs[0].plot(spiral_data['t'], spiral_data['bdot'][1], 'C3', lw=1)
+    axs[1].plot(spiral_data['t'], spiral_data['bdot'][2], 'C2', lw=1)
+    axs[2].plot(spiral_data['t'], spiral_data['bdot'][3], 'C0', lw=1)
+
+def plot_isat(ax, spiral_data):
+    #ax1 = ax.twinx()
+    ax.plot(spiral_data['t'], spiral_data['I_spiral'][2], 'C3', lw=1, label='spiral')
+    ax.plot(spiral_data['t'], spiral_data['I_double'][4], 'C0', lw=1, label='double')
+    lg = ax.legend(frameon=False)
+    if lg:
+        lg.draggable()
+    #ax1.plot(spiral_data['t'], 78*spiral_data['I_spiral'][2], 'C3', lw=1)
+    #ax1.plot(spiral_data['t'], 386*spiral_data['I_double'][4], 'C0', lw=1)
+

@@ -166,6 +166,50 @@ def retrieve_magnetron_data(wipal_tree, n_mag=2, npts=100):
 
     return t, forward, reflected
 
+def retrieve_spiral_data(shot_number):
+    wipal_tree = mds.Tree("wipal", shot_number)
+
+    bdot_nodes = ["\\spiral_probe_bdot_{0:d}".format(x) for x in range(1,4)]
+    spiral_I_nodes  = ["\\spiral_probe_spiral_{0:d}_I".format(x) for x in range(1, 3)]
+    double_I_nodes = ["\\spiral_probe_double_{0:d}_I".format(x) for x in range(3, 5)]
+
+    bdot_loc_node = "\\spiral_probe_bdot_loc"
+    double_loc_node = "\\spiral_probe_double_locs"
+    spiral_loc_node = "\\spiral_probe_spiral_locs"
+
+    bdot_labels = range(1, 4)
+    spiral_labels = range(1, 3)
+    double_labels = range(3, 5)
+
+    t, bdot = _retrieve_data(wipal_tree, bdot_labels, bdot_nodes, npts=1)
+    _, spiral_I = _retrieve_data(wipal_tree, spiral_labels, spiral_I_nodes, npts=1)
+    _, double_I = _retrieve_data(wipal_tree, double_labels, double_I_nodes, npts=1)
+    try:
+        timing = wipal_tree.getNode("\\spiral_probe_timing").data()
+    except mds.TreeNODATA, e:
+        timing = None
+
+    #try:
+    #    bdot_loc = wipal_tree.getNode(bdot_loc_node).data()
+    #except mds.TreeNODATA, e:
+    #    bdot_loc = None
+
+    #try:
+    #    print(double_loc_node)
+    #    double_loc = wipal_tree.getNode(double_loc_node).data()
+    #except mds.TreeNODATA, e:
+    #    double_loc = None
+
+    #try:
+    #    spiral_loc = wipal_tree.getNode(spiral_loc_node).data()
+    #except mds.TreeNODATA, e:
+    #    spiral_loc = None
+
+    spiral_data = {"t": t, "bdot": bdot, "I_spiral": spiral_I, "I_double": double_I, "timing": timing}#, "bdot_loc": bdot_loc, "double_loc": double_loc, "spiral_loc": spiral_loc}
+
+    return spiral_data
+
+
 
 def retrieve_gun_data(shot_number, nguns=19, npts=100):
     wipal_tree = mds.Tree("wipal", shot_number)
@@ -198,10 +242,11 @@ def retrieve_gun_data(shot_number, nguns=19, npts=100):
     Ibias_tot = total['I_bias_tot']
     Parc_tot = total['P_arc_tot']
     Pbias_tot = total['P_bias_tot']
+    spiral_data = retrieve_spiral_data(shot_number)
 
     gun_data = {'t': t, "Iarc": Iarc, "Varc": Varc, "Ibias": Ibias, "Vbias": Vbias, "locs": locs,
             "Iarc_tot": Iarc_tot, "Ibias_tot": Ibias_tot, "Parc_tot": Parc_tot, "Pbias_tot": Pbias_tot, 
-            "valid_guns": valid_guns}
+            "valid_guns": valid_guns, 'spiral_probe': spiral_data}
 
     return gun_data
 

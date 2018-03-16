@@ -25,15 +25,15 @@ class MyWindow(QtWidgets.QWidget):
         self.spinBox.setKeyboardTracking(False)
         self.spinBox.setValue(mds.tree.Tree.getCurrent("wipal"))
         self.shot_number = self.spinBox.value()
-
-        self.mds_update_event = events.MyEvent("raw_data_ready")
-        self.mds_update_event.sender.emitter.connect(self.fetch_data)
+        self.mds_update_event = None
+        #self.mds_update_event = events.MyEvent("raw_data_ready")
+        #self.mds_update_event.sender.emitter.connect(self.fetch_data)
 
         # Share x axis check box
-        #self.shareX = QtWidgets.QCheckBox("Share X-Axis", self)
+        self.shareX = QtWidgets.QCheckBox("Share X-Axis", self)
 
         # Auto Update Shot Number check box
-        #self.autoUpdate = QtWidgets.QCheckBox("Auto Update", self)
+        self.autoUpdate = QtWidgets.QCheckBox("Auto Update", self)
 
         # Update Plot Button
         self.updateBtn = QtWidgets.QPushButton("Update", self)
@@ -47,6 +47,8 @@ class MyWindow(QtWidgets.QWidget):
         self.spinBox.setFont(self.font)
         self.updateBtn.setFont(self.font)
         self.status.setFont(self.font)
+        self.shareX.setFont(self.font)
+        self.autoUpdate.setFont(self.font)
 
 
         # Create matplotlib figures here
@@ -57,8 +59,8 @@ class MyWindow(QtWidgets.QWidget):
         # Handle Layout Here
         self.hbox = QtWidgets.QHBoxLayout()
         self.hbox.addWidget(self.spinBox)
-        #self.hbox.addWidget(self.shareX)
-        #self.hbox.addWidget(self.autoUpdate)
+        self.hbox.addWidget(self.shareX)
+        self.hbox.addWidget(self.autoUpdate)
         self.hbox.addWidget(self.updateBtn)
         self.hbox.addWidget(self.status)
         self.hbox.addStretch(1)
@@ -75,10 +77,35 @@ class MyWindow(QtWidgets.QWidget):
         #self.timer.timeout.connect(self.process_timeout)
 
         self.updateBtn.clicked.connect(self.update_pressed)
-        #self.autoUpdate.stateChanged.connect(self.timer_start_stop)
+        self.autoUpdate.stateChanged.connect(self.change_auto_update)
+        self.shareX.stateChanged.connect(self.change_sharex)
 
         self.fetch_data(self.shot_number)
         self.show()
+
+    def change_auto_update(self, state):
+        if state == QtCore.Qt.Checked:
+            if self.mds_update_event is None:
+                self.mds_update_event = events.MyEvent("raw_data_ready")
+                self.mds_update_event.sender.emitter.connect(self.fetch_data)
+        else:
+            if self.mds_update_event is not None and self.mds_update_event.isAlive():
+                self.mds_update_event.cancel()
+                self.mds_update_event = None
+
+    def change_sharex(self, state):
+        axs = self.axs
+        ax0 = axs[0][0]
+        if state == QtCore.Qt.Checked:
+            for ax in axs:
+                for a in ax:
+                    if True:#a != axs[2][0]:
+                        a.get_shared_x_axes().join(a, ax0)
+        else:
+            for ax in axs:
+                for a in ax:
+                    if True: #a != axs[2][0]:
+                        ax0.get_shared_x_axes().remove(a)
 
     #def timer_start_stop(self, state):
     #    if state == QtCore.Qt.Checked:
@@ -127,7 +154,7 @@ class MyWindow(QtWidgets.QWidget):
         self.shot_number = shot_number
         self.spinBox.setValue(self.shot_number)
         self.status.setText("Retrieving Data from Shot {0:d}".format(shot_number))
-        worker = Worker(fetch.retrieve_discharge_data, shot_number, n_anodes=20, n_cathodes=12, npts=10)
+        worker = Worker(fetch.retrieve_discharge_data, shot_number, n_anodes=20, n_cathodes=12, npts=1)
         worker.signals.result.connect(self.handle_mdsplus_data)
         self.threadpool.start(worker)
 
