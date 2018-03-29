@@ -6,6 +6,7 @@ import argparse
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run a PiScope for the Big Red Ball.")
     parser.add_argument("--config", "-c", type=str, default=None, help="Config File to Load.")
+    parser.add_argument("--shot_number", "-s", type=int, default=None, help="Shot Number to Open at Start Up")
     #group = parser.add_mutually_exclusive_group()
     #group.add_argument("-d", "--discharge", action="store_true")
     #group.add_argument("-g", "--gun", action="store_true")
@@ -30,7 +31,7 @@ if __name__ == "__main__":
     import app.gui.app as MyApp
 
     myapp = QApplication([])
-    window = MyApp.MyWindow(args.config)
+    window = MyApp.MyWindow(args.config, args.shot_number)
     #if args.magnetics:
     #    window = MyApp.MyWindow(args.hall)
     #else:

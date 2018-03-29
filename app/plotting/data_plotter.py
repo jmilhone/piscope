@@ -9,16 +9,11 @@ def plot_all_data(axs, locs, data):
 
 def plot(ax, info_dict, data):
     info_keys = info_dict.keys()
-
     for d in data:
         if len(d.data) > 1:
             ax.plot(d.time, d.data, label=d.name)
 
     lg = None
-    #for x in info_keys:
-    #    if x.lower() == 'legend' and strtobool(info_dict[x]):
-    #        lg = ax.legend()
-
     if 'legend' in info_keys and strtobool(info_dict['legend']):
         lg = ax.legend()
 
