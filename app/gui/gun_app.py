@@ -6,7 +6,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 import matplotlib.pyplot as plt
 from workers import Worker
 from ..data import fetch
-import readline
+#import readline
 import MDSplus as mds
 from ..plotting import gun_plotting
 import events

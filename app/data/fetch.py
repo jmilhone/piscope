@@ -1,5 +1,5 @@
 from __future__ import print_function
-import readline
+#import readline
 import MDSplus as mds
 import node_names
 import numpy as np

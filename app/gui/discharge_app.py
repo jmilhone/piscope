@@ -6,7 +6,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 import matplotlib.pyplot as plt
 from workers import Worker
 from ..data import fetch
-import readline
+#import readline
 import MDSplus as mds
 from ..plotting import discharge_plotting
 import events
@@ -154,7 +154,7 @@ class MyWindow(QtWidgets.QWidget):
         self.shot_number = shot_number
         self.spinBox.setValue(self.shot_number)
         self.status.setText("Retrieving Data from Shot {0:d}".format(shot_number))
-        worker = Worker(fetch.retrieve_discharge_data, shot_number, n_anodes=20, n_cathodes=12, npts=1)
+        worker = Worker(fetch.retrieve_discharge_data, shot_number, n_anodes=20, n_cathodes=12, npts=100)
         worker.signals.result.connect(self.handle_mdsplus_data)
         self.threadpool.start(worker)
 
@@ -176,11 +176,14 @@ class MyWindow(QtWidgets.QWidget):
         # Step 2 plot the data
         cathode_axs = [axs[2][0], axs[2][1], axs[2][2]]
         probe_axs = [axs[0][0], axs[1][0], axs[1][1]]
-        discharge_plotting.plot_discharge(cathode_axs, t, cathode_voltage, cathode_current, anode_current)
-        discharge_plotting.plot_probes(probe_axs, tt, ne, te, vf)
-        discharge_plotting.plot_power(axs[0][2], t, total_power, t_mag, forward, reflected)
+        if t is not None:
+            discharge_plotting.plot_discharge(cathode_axs, t, cathode_voltage, cathode_current, anode_current)
+            discharge_plotting.plot_power(axs[0][2], t, total_power, t_mag, forward, reflected)
+
+        if tt is not None:
+            discharge_plotting.plot_probes(probe_axs, tt, ne, te, vf)
         if total_anode_current is not None and total_cathode_current is not None:
-            #discharge_plotting.plot_cathode_hemisphere_currents(axs[1][2], t, cathode_current, [6, 7, 10, 12], [1, 2, 8, 9])
+            discharge_plotting.plot_cathode_hemisphere_currents(axs[1][2], t, cathode_current, [1, 6, 8, 12], [2, 7, 9, 10])
             discharge_plotting.plot_total_current(axs[1][2], t, total_cathode_current, total_anode_current)
         if t_mm is not None and ne_mm is not None:
             discharge_plotting.plot_density(axs[0][1], t_mm, ne_mm)

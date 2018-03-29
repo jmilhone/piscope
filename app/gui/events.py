@@ -1,4 +1,4 @@
-import readline
+#import readline
 from MDSplus import Event
 from PyQt5 import QtCore
 
