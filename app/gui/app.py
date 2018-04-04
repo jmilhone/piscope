@@ -20,6 +20,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.event_name = None
         self.server = None
         self.config = None
+        self.config_filename = config_file
         self.threadpool = QtCore.QThreadPool()  # This is where the grabbing of data will take place to not lock the gui
 
         if shot_number is None:
@@ -30,7 +31,7 @@ class MyWindow(QtWidgets.QMainWindow):
         # Menu Bar stuff
         self.menu = self.menuBar()
         self.file_menu = self.menu.addMenu("&File")
-        self.open_config_action = QtWidgets.QAction("&Open Configuration", self)
+        self.open_config_action = QtWidgets.QAction("&Open Configuration...", self)
         self.file_menu.addAction(self.open_config_action)
         self.open_config_action.triggered.connect(self.onOpenClick)
         self.option_menu = self.menu.addMenu("&Options")
@@ -42,6 +43,10 @@ class MyWindow(QtWidgets.QMainWindow):
         self.shareX_action.setCheckable(True)
         self.openPanelConfigAction = QtWidgets.QAction("&Edit Configuration", self)
         self.file_menu.addAction(self.openPanelConfigAction)
+        self.save_action = QtWidgets.QAction("Save...", self)
+        self.save_as_action = QtWidgets.QAction("Save As...", self)
+        self.file_menu.addAction(self.save_action)
+        self.file_menu.addAction(self.save_as_action)
         self.centralWidget = QtWidgets.QWidget()
 
         self.spinBox = QtWidgets.QSpinBox(self)
@@ -76,25 +81,24 @@ class MyWindow(QtWidgets.QMainWindow):
             self.autoUpdate_action.setDisabled(True)
             self.shareX_action.setDisabled(True)
             self.openPanelConfigAction.setDisabled(True)
+            self.save_action.setDisabled(True)
+            self.save_as_action.setDisabled(True)
 
         self.updateBtn.clicked.connect(self.update_pressed)
-        # self.autoUpdate.stateChanged.connect(self.change_auto_update)
-        #self.shareX.stateChanged.connect(self.change_sharex)
         self.shareX_action.triggered.connect(self.change_sharex)
         self.openPanelConfigAction.triggered.connect(self.edit_configuration)
+        self.save_action.triggered.connect(self.save_configuration)
+        self.save_as_action.triggered.connect(self.save_as_configuration)
         self.show()
 
     def edit_configuration(self):
         dlg = PanelConfig(self.config)
         if dlg.exec_():
-            print(dlg.hello)
-
+            self.config = dlg.config
+            self.fetch_data(self.shot_number)
 
     def initalize_layout(self):
         self.hbox.addWidget(self.spinBox)
-        #self.hbox.addWidget(self.binned)
-        # self.hbox.addWidget(self.shareX)
-        # self.hbox.addWidget(self.autoUpdate)
         self.hbox.addWidget(self.updateBtn)
         self.hbox.addWidget(self.status)
         self.hbox.addStretch(1)
@@ -113,6 +117,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
         if dlg.exec_():
             filenames = dlg.selectedFiles()
+            self.config_filename = filenames[0]
             self.load_configuration(filenames[0])
 
     def load_configuration(self, filename):
@@ -121,6 +126,8 @@ class MyWindow(QtWidgets.QMainWindow):
             self.shareX_action.setEnabled(True)
             self.autoUpdate_action.setEnabled(True)
             self.openPanelConfigAction.setEnabled(True)
+            self.save_action.setEnabled(True)
+            self.save_as_action.setEnabled(True)
             self.update_subplot_config(nrow, ncol)
 
             self.node_locs = locs
@@ -132,10 +139,10 @@ class MyWindow(QtWidgets.QMainWindow):
         config = config.dict()
         self.config = config
 
-        nrow = int(config['setup']['nrow'])
-        ncol = int(config['setup']['ncol'])
-        self.event = config['setup']['event']
-        self.server = config['setup']['server']
+        nrow = int(self.config['setup']['nrow'])
+        ncol = int(self.config['setup']['ncol'])
+        self.event = self.config['setup']['event']
+        self.server = self.config['setup']['server']
 
         data_locs = {}
         for key in config.keys():
@@ -161,6 +168,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(int)
     def fetch_data(self, shot_number):
+        print('grabbing data')
         self.shot_number = shot_number
         self.spinBox.setValue(shot_number)
         node_locs = self.node_locs
@@ -170,6 +178,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.threadpool.start(worker)
 
     def handle_mdsplus_data(self, data):
+        print('i have the data')
         axs = self.axs
         for axes in axs:
             for ax in axes:
@@ -217,3 +226,21 @@ class MyWindow(QtWidgets.QMainWindow):
         shot_number = self.spinBox.value()
         self.shot_number = shot_number
         self.fetch_data(shot_number)
+
+    def save_as_configuration(self):
+        self.save_as_dialog = QtWidgets.QFileDialog()
+        self.save_as_dialog.fileSelected.connect(self._save_configuration)
+        self.save_as_dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        self.save_as_dialog.setNameFilter("Config Files (*.ini *.txt)")
+        self.save_as_dialog.exec_()
+
+    def save_configuration(self):
+        self._save_configuration(self.config_filename)
+
+    def _save_configuration(self, filename):
+        self.config_filename = filename
+        config_obj = ConfigObj()
+        config_obj.filename = self.config_filename
+        config_obj.update(self.config)
+        config_obj.write()
+

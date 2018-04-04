@@ -25,7 +25,9 @@ def retrieve_all_data(shot_number, locs, server):
     for grid_position in locs:
 
         temp_data = []
-        for name in locs[grid_position]:
+        names = locs[grid_position].keys()
+        names.sort()
+        for name in names:
             if name.lower() not in ['legend', 'xlabel', 'ylabel']:
                 temp_data.append(retrieve_data(con, locs[grid_position][name], name))
                 #temp_data.append(retrieve_data(wipal, locs[grid_position][name], name))

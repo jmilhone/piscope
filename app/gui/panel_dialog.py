@@ -1,13 +1,13 @@
 from __future__ import division, print_function
 from PyQt5 import QtCore, QtWidgets, QtGui
 from distutils.util import strtobool
-
+from copy import deepcopy
 
 class PanelConfig(QtWidgets.QDialog):
 
     def __init__(self, config):
         super(PanelConfig, self).__init__()
-        self.config = config
+        self.config = deepcopy(config)
 
         grid = config.keys()
         grid = [x for x in grid if x != 'setup']
@@ -160,15 +160,35 @@ class PanelConfig(QtWidgets.QDialog):
         ytext = self.y_input.text()
         label = self.label.text()
 
-        if not (ytext and label):
-            self.error_dialog = QtWidgets.QErrorMessage()
-            self.error_dialog.setWindowModality(QtCore.Qt.WindowModal)
-            self.error_dialog.showMessage('You did not fill in the necessary fields (y and label)!')
-            return
+        #if not (ytext and label):
+        #    self.error_dialog = QtWidgets.QErrorMessage()
+        #    self.error_dialog.setWindowModality(QtCore.Qt.WindowModal)
+        #    self.error_dialog.showMessage('You did not fill in the necessary fields (y and label)!')
+        #    return
 
+        pos = self.combo.currentText()
+        item = self.item_list.currentItem()
 
+        if ytext and xtext and label:
+            self.config[pos][label] = {}
+            self.config[pos][label]['x'] = xtext
+            self.config[pos][label]['y'] = ytext
+        else:
+            if idx != 0:
+                print("I should delete")
+                current_label = item.text()
+                print(current_label)
+                del self.config[pos][current_label]
 
+        xlabel = self.xlabel.text()
+        ylabel = self.ylabel.text()
+        legend = str(self.legend.isChecked())
 
+        self.config[pos]['legend'] = legend
+        self.config[pos]['xlabel'] = xlabel
+        self.config[pos]['ylabel'] = ylabel
+        self.item_list.clear()
+        self.populate_list_box(pos)
 
 
 
