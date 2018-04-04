@@ -8,7 +8,7 @@ from workers import Worker
 from ..data import mdsplus_helpers as mdsh
 from ..plotting import data_plotter
 import events
-
+from panel_dialog import PanelConfig
 
 class MyWindow(QtWidgets.QMainWindow):
 
@@ -40,7 +40,8 @@ class MyWindow(QtWidgets.QMainWindow):
         self.option_menu.addAction(self.shareX_action)
         self.autoUpdate_action.setCheckable(True)
         self.shareX_action.setCheckable(True)
-
+        self.openPanelConfigAction = QtWidgets.QAction("&Edit Configuration", self)
+        self.file_menu.addAction(self.openPanelConfigAction)
         self.centralWidget = QtWidgets.QWidget()
 
         self.spinBox = QtWidgets.QSpinBox(self)
@@ -74,12 +75,19 @@ class MyWindow(QtWidgets.QMainWindow):
             self.status.setText("Please Load a Configuration File")
             self.autoUpdate_action.setDisabled(True)
             self.shareX_action.setDisabled(True)
+            self.openPanelConfigAction.setDisabled(True)
 
         self.updateBtn.clicked.connect(self.update_pressed)
         # self.autoUpdate.stateChanged.connect(self.change_auto_update)
         #self.shareX.stateChanged.connect(self.change_sharex)
         self.shareX_action.triggered.connect(self.change_sharex)
+        self.openPanelConfigAction.triggered.connect(self.edit_configuration)
         self.show()
+
+    def edit_configuration(self):
+        dlg = PanelConfig(self.config)
+        if dlg.exec_():
+            print(dlg.hello)
 
 
     def initalize_layout(self):
@@ -112,7 +120,9 @@ class MyWindow(QtWidgets.QMainWindow):
             self.updateBtn.setEnabled(True)
             self.shareX_action.setEnabled(True)
             self.autoUpdate_action.setEnabled(True)
+            self.openPanelConfigAction.setEnabled(True)
             self.update_subplot_config(nrow, ncol)
+
             self.node_locs = locs
 
             self.fetch_data(self.shot_number)
