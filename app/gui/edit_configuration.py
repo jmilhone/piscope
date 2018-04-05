@@ -3,10 +3,10 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from distutils.util import strtobool
 from copy import deepcopy
 
-class PanelConfig(QtWidgets.QDialog):
+class EditConfigDialog(QtWidgets.QDialog):
 
     def __init__(self, config):
-        super(PanelConfig, self).__init__()
+        super(EditConfigDialog, self).__init__()
         self.config = deepcopy(config)
 
         grid = config.keys()
@@ -52,6 +52,7 @@ class PanelConfig(QtWidgets.QDialog):
         self.combo.activated.connect(self.change_list_view)
         self.item_list.currentRowChanged.connect(self.populate_signal_fields)
         self.hello = 100
+
     def print_hello(self):
         print("hello")
 
@@ -170,6 +171,9 @@ class PanelConfig(QtWidgets.QDialog):
         item = self.item_list.currentItem()
 
         if ytext and xtext and label:
+            if idx != 0:
+                current_label = item.text()
+                del self.config[pos][current_label]
             self.config[pos][label] = {}
             self.config[pos][label]['x'] = xtext
             self.config[pos][label]['y'] = ytext

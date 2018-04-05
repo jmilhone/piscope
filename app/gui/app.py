@@ -8,7 +8,9 @@ from workers import Worker
 from ..data import mdsplus_helpers as mdsh
 from ..plotting import data_plotter
 import events
-from panel_dialog import PanelConfig
+from edit_configuration import EditConfigDialog
+from new_configuration import NewConfigDialog
+
 
 class MyWindow(QtWidgets.QMainWindow):
 
@@ -32,7 +34,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.menu = self.menuBar()
         self.file_menu = self.menu.addMenu("&File")
         self.open_config_action = QtWidgets.QAction("&Open Configuration...", self)
-        self.file_menu.addAction(self.open_config_action)
         self.open_config_action.triggered.connect(self.onOpenClick)
         self.option_menu = self.menu.addMenu("&Options")
         self.shareX_action = QtWidgets.QAction("&Share X-axis", self)
@@ -42,12 +43,16 @@ class MyWindow(QtWidgets.QMainWindow):
         self.autoUpdate_action.setCheckable(True)
         self.shareX_action.setCheckable(True)
         self.openPanelConfigAction = QtWidgets.QAction("&Edit Configuration", self)
-        self.file_menu.addAction(self.openPanelConfigAction)
-        self.save_action = QtWidgets.QAction("Save...", self)
+        self.save_action = QtWidgets.QAction("&Save...", self)
         self.save_as_action = QtWidgets.QAction("Save As...", self)
+        self.centralWidget = QtWidgets.QWidget()
+        self.new_config_action = QtWidgets.QAction("&New Configuration...", self)
+
+        self.file_menu.addAction(self.new_config_action)
+        self.file_menu.addAction(self.open_config_action)
+        self.file_menu.addAction(self.openPanelConfigAction)
         self.file_menu.addAction(self.save_action)
         self.file_menu.addAction(self.save_as_action)
-        self.centralWidget = QtWidgets.QWidget()
 
         self.spinBox = QtWidgets.QSpinBox(self)
         self.spinBox.setRange(0, 999999)
@@ -89,12 +94,37 @@ class MyWindow(QtWidgets.QMainWindow):
         self.openPanelConfigAction.triggered.connect(self.edit_configuration)
         self.save_action.triggered.connect(self.save_configuration)
         self.save_as_action.triggered.connect(self.save_as_configuration)
+        self.new_config_action.triggered.connect(self.new_configuration)
+
         self.show()
 
+    def new_configuration(self):
+        dlg = NewConfigDialog()
+
+        if dlg.exec_():
+            print(dlg.nrows, dlg.ncols, dlg.server, dlg.event)
+            self.config_filename = None
+            new_config = {}
+            new_config['setup'] = {'nrows': dlg.nrows,
+                                   'ncols': dlg.ncols,
+                                   'server': dlg.server,
+                                   'event': dlg.event,
+                                   }
+            for i in range(dlg.nrows):
+                for j in range(dlg.ncols):
+                    new_config['{0:d}{1:d}'.format(i, j)] = {}
+
+            self.config = new_config
+            self.node_locs = self.get_data_locs()
+            self.update_subplot_config(dlg.nrows, dlg.ncols)
+            print(self.node_locs)
+            self.fetch_data(self.shot_number)
+
     def edit_configuration(self):
-        dlg = PanelConfig(self.config)
+        dlg = EditConfigDialog(self.config)
         if dlg.exec_():
             self.config = dlg.config
+            self.node_locs = self.get_data_locs()
             self.fetch_data(self.shot_number)
 
     def initalize_layout(self):
@@ -143,12 +173,16 @@ class MyWindow(QtWidgets.QMainWindow):
         ncol = int(self.config['setup']['ncol'])
         self.event = self.config['setup']['event']
         self.server = self.config['setup']['server']
+        data_locs = self.get_data_locs()
 
-        data_locs = {}
-        for key in config.keys():
-            if key.lower() != 'setup':
-                data_locs[key] = config[key]
         return nrow, ncol, data_locs
+
+    def get_data_locs(self):
+        data_locs = {}
+        for key in self.config.keys():
+            if key.lower() != 'setup':
+                data_locs[key] = self.config[key]
+        return data_locs
 
 
     def update_subplot_config(self, nrow, ncol):
@@ -235,7 +269,10 @@ class MyWindow(QtWidgets.QMainWindow):
         self.save_as_dialog.exec_()
 
     def save_configuration(self):
-        self._save_configuration(self.config_filename)
+        if self.config_filename:
+            self._save_configuration(self.config_filename)
+        else:
+            self.save_as_configuration()
 
     def _save_configuration(self, filename):
         self.config_filename = filename
