@@ -26,6 +26,15 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.x_input = QtWidgets.QLineEdit(self)
         self.y_input = QtWidgets.QLineEdit(self)
 
+        self.xlim_check = QtWidgets.QCheckBox(self)
+        self.xlim_low = QtWidgets.QDoubleSpinBox(self)
+        self.xlim_high = QtWidgets.QDoubleSpinBox(self)
+
+        self.ylim_check = QtWidgets.QCheckBox(self)
+        self.ylim_low = QtWidgets.QDoubleSpinBox(self)
+        self.ylim_high = QtWidgets.QDoubleSpinBox(self)
+
+
         self.xlabel = QtWidgets.QLineEdit(self)
         self.ylabel = QtWidgets.QLineEdit(self)
         self.label = QtWidgets.QLineEdit(self)
@@ -41,12 +50,17 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.buttons.rejected.connect(self.reject)
         self.buttons.button(QtWidgets.QDialogButtonBox.Apply).clicked.connect(self.handle_apply_event)
 
+        self.xlim_check.stateChanged.connect(self.enable_xlimits)
+        self.ylim_check.stateChanged.connect(self.enable_ylimits)
+
         self.vbox = QtWidgets.QVBoxLayout()
         self.hbox = QtWidgets.QHBoxLayout()
         self.xhbox = QtWidgets.QHBoxLayout()
         self.yhbox = QtWidgets.QHBoxLayout()
         self.options_box = QtWidgets.QHBoxLayout()
         self.lab_box = QtWidgets.QHBoxLayout()
+        self.xlim_box = QtWidgets.QHBoxLayout()
+        self.ylim_box = QtWidgets.QHBoxLayout()
         self.init_UI()
 
         self.combo.activated.connect(self.change_list_view)
@@ -57,8 +71,6 @@ class EditConfigDialog(QtWidgets.QDialog):
         print("hello")
 
     def init_UI(self):
-        self.populate_list_box(self.grid[0])
-        self.populate_options(0)
         self.x_qlabel.setText("X: ")
         self.y_qlabel.setText("Y: ")
 
@@ -69,6 +81,21 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.combo_label.setText("Plot: ")
         self.setGeometry(200, 200, 500, 200)
         self.setWindowTitle('Edit Configuration')
+
+        self.xlim_check.setText("X Limits")
+        self.ylim_check.setText("Y Limits")
+
+        # I'm annoyed that I have to do this!
+        self.xlim_low.setRange(-1e100, 1e100)
+        self.xlim_high.setRange(-1e100, 1e100)
+        self.ylim_low.setRange(-1e100, 1e100)
+        self.ylim_high.setRange(-1e100, 1e100)
+
+        self.xlim_low.setDecimals(4)
+        self.xlim_high.setDecimals(4)
+        self.ylim_low.setDecimals(4)
+        self.ylim_high.setDecimals(4)
+
 
         self.hbox.addWidget(self.combo_label)
         self.hbox.addWidget(self.combo)
@@ -91,12 +118,27 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.yhbox.addWidget(self.y_qlabel)
         self.yhbox.addWidget(self.y_input)
 
+        self.xlim_box.addWidget(self.xlim_check)
+        self.xlim_box.addWidget(self.xlim_low)
+        self.xlim_box.addWidget(self.xlim_high)
+        self.xlim_box.addStretch()
+
+        self.ylim_box.addWidget(self.ylim_check)
+        self.ylim_box.addWidget(self.ylim_low)
+        self.ylim_box.addWidget(self.ylim_high)
+        self.ylim_box.addStretch()
+
         self.vbox.addLayout(self.options_box)
+        self.vbox.addLayout(self.xlim_box)
+        self.vbox.addLayout(self.ylim_box)
         self.vbox.addLayout(self.lab_box)
         self.vbox.addLayout(self.xhbox)
         self.vbox.addLayout(self.yhbox)
         self.vbox.addWidget(self.buttons)
         self.setLayout(self.vbox)
+
+        self.populate_list_box(self.grid[0])
+        self.populate_options(0)
 
     def change_list_view(self, idx):
         text = self.grid[idx]
@@ -123,8 +165,35 @@ class EditConfigDialog(QtWidgets.QDialog):
         else:
             self.legend.setChecked(False)
 
+        if "xlim" in keys:
+            self.xlim_check.setChecked(True)
+            self.xlim_low.setEnabled(True)
+            self.xlim_high.setEnabled(True)
+            xlim = local_config['xlim']
+            if isinstance(xlim, list) and len(xlim) == 2:
+                self.xlim_low.setValue(float(xlim[0]))
+                self.xlim_high.setValue(float(xlim[1]))
+        else:
+            self.xlim_check.setChecked(False)
+            self.xlim_low.setEnabled(False)
+            self.xlim_high.setEnabled(False)
+
+
+        if "ylim" in keys:
+            self.ylim_check.setChecked(True)
+            self.ylim_low.setEnabled(True)
+            self.ylim_high.setEnabled(True)
+            ylim = local_config['ylim']
+            if isinstance(ylim, list) and len(ylim) == 2:
+                self.ylim_low.setValue(float(ylim[0]))
+                self.ylim_high.setValue(float(ylim[1]))
+        else:
+            self.ylim_check.setChecked(False)
+            self.ylim_low.setEnabled(False)
+            self.ylim_high.setEnabled(False)
+
     def populate_list_box(self, key):
-        ignore_items = ['xlabel', 'ylabel', 'legend']
+        ignore_items = ['xlabel', 'ylabel', 'legend', 'xlim', 'ylim']
         pos_items = [x for x in self.config[key] if x not in ignore_items]
         pos_items.sort()
 
@@ -191,10 +260,35 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.config[pos]['legend'] = legend
         self.config[pos]['xlabel'] = xlabel
         self.config[pos]['ylabel'] = ylabel
+
+        if self.xlim_check.isChecked():
+            xlow = self.xlim_low.value()
+            xhigh = self.xlim_high.value()
+            self.config[pos]['xlim'] = [str(xlow), str(xhigh)]
+
+        if self.ylim_check.isChecked():
+            ylow = self.ylim_low.value()
+            yhigh = self.ylim_high.value()
+            self.config[pos]['ylim'] = [str(ylow), str(yhigh)]
+
         self.item_list.clear()
         self.populate_list_box(pos)
 
+    def enable_xlimits(self, state):
+        if state == QtCore.Qt.Checked:
+            self.xlim_low.setEnabled(True)
+            self.xlim_high.setEnabled(True)
+        else:
+            self.xlim_low.setDisabled(True)
+            self.xlim_high.setDisabled(True)
 
+    def enable_ylimits(self, state):
+        if state == QtCore.Qt.Checked:
+            self.ylim_low.setEnabled(True)
+            self.ylim_high.setEnabled(True)
+        else:
+            self.ylim_low.setDisabled(True)
+            self.ylim_high.setDisabled(True)
 
 
 

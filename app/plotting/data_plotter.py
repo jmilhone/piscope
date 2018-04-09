@@ -26,3 +26,14 @@ def plot(ax, info_dict, data):
     if lg:
         lg.draggable()
 
+    if 'xlim' in info_keys:
+        xlim = info_dict['xlim']
+        xlim = [float(x) for x in xlim]
+        ax.set_xlim(xlim)
+
+    if 'ylim' in info_keys:
+        ylim = info_dict['ylim']
+        ylim = [float(y) for y in ylim]
+        ax.set_ylim(ylim)
+
+

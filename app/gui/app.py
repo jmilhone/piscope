@@ -168,7 +168,7 @@ class MyWindow(QtWidgets.QMainWindow):
         config = ConfigObj(filename)
         config = config.dict()
         self.config = config
-
+        print(config['00'])
         nrow = int(self.config['setup']['nrow'])
         ncol = int(self.config['setup']['ncol'])
         self.event = self.config['setup']['event']
