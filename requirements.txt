@@ -1,0 +1,9 @@
+PyQt5
+numpy
+re
+matplotlib
+MDSplus
+distutils
+copy
+configobj
+pyqt

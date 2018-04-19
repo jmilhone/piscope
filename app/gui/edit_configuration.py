@@ -2,6 +2,8 @@ from __future__ import division, print_function
 from PyQt5 import QtCore, QtWidgets, QtGui
 from distutils.util import strtobool
 from copy import deepcopy
+from scientificspin import ScientificDoubleSpinBox
+
 
 class EditConfigDialog(QtWidgets.QDialog):
 
@@ -27,12 +29,16 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.y_input = QtWidgets.QLineEdit(self)
 
         self.xlim_check = QtWidgets.QCheckBox(self)
-        self.xlim_low = QtWidgets.QDoubleSpinBox(self)
-        self.xlim_high = QtWidgets.QDoubleSpinBox(self)
+        # self.xlim_low = QtWidgets.QDoubleSpinBox(self)
+        # self.xlim_high = QtWidgets.QDoubleSpinBox(self)
+        self.xlim_low = ScientificDoubleSpinBox(self)
+        self.xlim_high = ScientificDoubleSpinBox(self)
 
         self.ylim_check = QtWidgets.QCheckBox(self)
-        self.ylim_low = QtWidgets.QDoubleSpinBox(self)
-        self.ylim_high = QtWidgets.QDoubleSpinBox(self)
+        # self.ylim_low = QtWidgets.QDoubleSpinBox(self)
+        # self.ylim_high = QtWidgets.QDoubleSpinBox(self)
+        self.ylim_low = ScientificDoubleSpinBox(self)
+        self.ylim_high = ScientificDoubleSpinBox(self)
 
 
         self.xlabel = QtWidgets.QLineEdit(self)
@@ -86,10 +92,10 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.ylim_check.setText("Y Limits")
 
         # I'm annoyed that I have to do this!
-        self.xlim_low.setRange(-1e100, 1e100)
-        self.xlim_high.setRange(-1e100, 1e100)
-        self.ylim_low.setRange(-1e100, 1e100)
-        self.ylim_high.setRange(-1e100, 1e100)
+        #self.xlim_low.setRange(-1e100, 1e100)
+        #self.xlim_high.setRange(-1e100, 1e100)
+        #self.ylim_low.setRange(-1e100, 1e100)
+        #self.ylim_high.setRange(-1e100, 1e100)
 
         self.xlim_low.setDecimals(4)
         self.xlim_high.setDecimals(4)
@@ -118,14 +124,14 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.yhbox.addWidget(self.y_qlabel)
         self.yhbox.addWidget(self.y_input)
 
-        self.xlim_box.addWidget(self.xlim_check)
-        self.xlim_box.addWidget(self.xlim_low)
-        self.xlim_box.addWidget(self.xlim_high)
+        self.xlim_box.addWidget(self.xlim_check, 1)
+        self.xlim_box.addWidget(self.xlim_low, 1)
+        self.xlim_box.addWidget(self.xlim_high, 1)
         self.xlim_box.addStretch()
 
-        self.ylim_box.addWidget(self.ylim_check)
-        self.ylim_box.addWidget(self.ylim_low)
-        self.ylim_box.addWidget(self.ylim_high)
+        self.ylim_box.addWidget(self.ylim_check, 1)
+        self.ylim_box.addWidget(self.ylim_low, 1)
+        self.ylim_box.addWidget(self.ylim_high, 1)
         self.ylim_box.addStretch()
 
         self.vbox.addLayout(self.options_box)

@@ -33,7 +33,7 @@ class MyWindow(QtWidgets.QMainWindow):
         # Menu Bar stuff
         self.menu = self.menuBar()
         self.file_menu = self.menu.addMenu("&File")
-        self.open_config_action = QtWidgets.QAction("&Open Configuration...", self)
+        self.open_config_action = QtWidgets.QAction(QtGui.QIcon("Icons/blue-folder-horizontal-open.png"), "&Open Configuration...", self)
         self.open_config_action.triggered.connect(self.onOpenClick)
         self.option_menu = self.menu.addMenu("&Options")
         self.shareX_action = QtWidgets.QAction("&Share X-axis", self)
@@ -42,11 +42,12 @@ class MyWindow(QtWidgets.QMainWindow):
         self.option_menu.addAction(self.shareX_action)
         self.autoUpdate_action.setCheckable(True)
         self.shareX_action.setCheckable(True)
-        self.openPanelConfigAction = QtWidgets.QAction("&Edit Configuration", self)
-        self.save_action = QtWidgets.QAction("&Save...", self)
-        self.save_as_action = QtWidgets.QAction("Save As...", self)
+        self.openPanelConfigAction = QtWidgets.QAction(QtGui.QIcon("Icons/application--pencil"), "&Edit Configuration", self)
+        self.save_action = QtWidgets.QAction(QtGui.QIcon("Icons/disk-black.png"), "&Save...", self)
+
+        self.save_as_action = QtWidgets.QAction(QtGui.QIcon("Icons/disks-black.png"), "Save As...", self)
         self.centralWidget = QtWidgets.QWidget()
-        self.new_config_action = QtWidgets.QAction("&New Configuration...", self)
+        self.new_config_action = QtWidgets.QAction(QtGui.QIcon("Icons/application--plus.png"), "&New Configuration...", self)
 
         self.file_menu.addAction(self.new_config_action)
         self.file_menu.addAction(self.open_config_action)
@@ -65,9 +66,13 @@ class MyWindow(QtWidgets.QMainWindow):
         # self.binned = QtWidgets.QCheckBox("Binned?", self)
         # self.autoUpdate = QtWidgets.QCheckBox("Auto Update", self)
         self.updateBtn = QtWidgets.QPushButton("Update", self)
+        self.updateBtn.setIcon(QtGui.QIcon("Icons/arrow-circle-225.png"))
         self.status = QtWidgets.QLabel("Idle", self)
 
         self.hbox = QtWidgets.QHBoxLayout()
+        self.shot_hbox = QtWidgets.QHBoxLayout()
+        self.shot_number_label = QtWidgets.QLabel()
+
         self.vbox = QtWidgets.QVBoxLayout()
         self.initalize_layout()
 
@@ -77,6 +82,16 @@ class MyWindow(QtWidgets.QMainWindow):
         self.axs = None
 
         self.setGeometry(100, 100, 1200, 1200)
+
+        self.font = self.spinBox.font()
+        self.font.setPointSize(18)
+        self.spinBox.setFont(self.font)
+        self.status.setFont(self.font)
+        self.updateBtn.setFont(self.font)
+        self.shot_number_label.setFont(self.font)
+
+        if self.shot_number is not None:
+            self.shot_number_label.setText("Shot Number: {0:d}".format(self.shot_number))
 
         if config_file is not None:
             self.load_configuration(config_file)
@@ -133,10 +148,16 @@ class MyWindow(QtWidgets.QMainWindow):
         self.hbox.addWidget(self.status)
         self.hbox.addStretch(1)
 
+        self.shot_hbox.addStretch()
+        self.shot_hbox.addWidget(self.shot_number_label)
+        self.shot_hbox.addStretch()
+
+        self.vbox.addLayout(self.shot_hbox)
         self.vbox.addStretch()
         self.vbox.addLayout(self.hbox)
         self.centralWidget.setLayout(self.vbox)
         self.setCentralWidget(self.centralWidget)
+
 
     def onOpenClick(self):
         dlg = QtWidgets.QFileDialog()
@@ -191,12 +212,14 @@ class MyWindow(QtWidgets.QMainWindow):
             self.vbox.removeWidget(self.canvas)
 
         self.vbox.removeItem(self.hbox)
+        self.vbox.removeItem(self.shot_hbox)
 
         self.figure, self.axs = plt.subplots(nrow, ncol)
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
 
         self.vbox.addWidget(self.toolbar, 2)
+        self.vbox.addLayout(self.shot_hbox)
         self.vbox.addWidget(self.canvas, 12)
         self.vbox.addLayout(self.hbox)
 
@@ -221,7 +244,8 @@ class MyWindow(QtWidgets.QMainWindow):
             self.status.setText("Error opening Shot {0:d}".format(self.shot_number))
         else:
             data_plotter.plot_all_data(axs, self.node_locs, data)
-        self.figure.suptitle("Shot {0:d}".format(self.shot_number))
+        #self.figure.suptitle("Shot {0:d}".format(self.shot_number))
+        self.shot_number_label.setText("Shot {0:d}".format(self.shot_number))
         self.figure.tight_layout()
 
         self.toolbar.update()
