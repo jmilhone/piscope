@@ -3,10 +3,11 @@ import numpy as np
 
 
 class Data:
-    def __init__(self, name, time, data):
+    def __init__(self, name, time, data, color):
         self._time = time
         self._data = data
         self.name = name
+        self.color = color
 
     @property
     def time(self):

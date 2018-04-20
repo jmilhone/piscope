@@ -12,6 +12,12 @@ from edit_configuration import EditConfigDialog
 from new_configuration import NewConfigDialog
 from downsample_dialog import EditDownsampleDialog
 
+
+default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
+                  '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
+                  '#bcbd22', '#17becf']
+
+
 class MyWindow(QtWidgets.QMainWindow):
 
     def __init__(self, config_file, shot_number=None):
@@ -221,8 +227,22 @@ class MyWindow(QtWidgets.QMainWindow):
         for key in self.config.keys():
             if key.lower() != 'setup':
                 data_locs[key] = self.config[key]
+                self.parse_data_colors(key)
         return data_locs
 
+    def parse_data_colors(self, key):
+        local_config = self.config[key]
+        keys = local_config.keys()
+        keys.sort()
+        top_ignore = ['xlabel', 'ylabel', 'xlim', 'ylim', 'legend']
+        j = 0
+        for k in keys:
+            if k not in top_ignore:
+                # this is a signal
+                # time to check if it has a color picked already
+                if 'color' not in local_config[k].keys():
+                    self.config[key][k]['color'] = default_colors[j % 10]
+                    j += 1
 
     def update_subplot_config(self, nrow, ncol):
         if self.figure is not None:

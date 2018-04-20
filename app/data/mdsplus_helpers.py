@@ -28,7 +28,7 @@ def retrieve_all_data(shot_number, locs, server):
         names = locs[grid_position].keys()
         names.sort()
         for name in names:
-            if name.lower() not in ['legend', 'xlabel', 'ylabel', 'xlim', 'ylim']:
+            if name.lower() not in ['legend', 'xlabel', 'ylabel', 'xlim', 'ylim', 'color']:
                 temp_data.append(retrieve_data(con, locs[grid_position][name], name))
                 #temp_data.append(retrieve_data(wipal, locs[grid_position][name], name))
 
@@ -65,7 +65,7 @@ def retrieve_data(connection, node_loc, name):
     except mds.MdsIpException, e:
         pass
 
-    return Data(name, t, data)
+    return Data(name, t, data, node_loc['color'])
 
     #try:
     #    node = tree.getNode(node_loc)

@@ -35,7 +35,7 @@ def plot(ax, info_dict, data, downsampling=1000):
     for d in actual_data:
         x, y = down_sampler.downsample(d, xstart, xend)
         # line, = ax.plot(d.time, d.data, label=d.name)
-        line, = ax.plot(x, y, label=d.name)
+        line, = ax.plot(x, y, label=d.name, color=d.color)
         down_sampler.lines.append(line)
 
     # for d in data:

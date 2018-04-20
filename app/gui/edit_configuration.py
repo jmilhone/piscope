@@ -4,6 +4,9 @@ from distutils.util import strtobool
 from copy import deepcopy
 from scientificspin import ScientificDoubleSpinBox
 
+default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
+                  '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
+                  '#bcbd22', '#17becf']
 
 class EditConfigDialog(QtWidgets.QDialog):
 
@@ -49,6 +52,12 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.ylab = QtWidgets.QLabel(self)
         self.lab = QtWidgets.QLabel(self)
 
+        self.color_label = QtWidgets.QLabel(self)
+        self.color_chosen = QtWidgets.QLabel(self)
+        self.color_input = QtWidgets.QLabel(self)
+
+        self.color_button = QtWidgets.QPushButton(self)
+
         self.buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Apply |
                                                   QtWidgets.QDialogButtonBox.Ok |
                                                   QtWidgets.QDialogButtonBox.Cancel)
@@ -63,6 +72,7 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.hbox = QtWidgets.QHBoxLayout()
         self.xhbox = QtWidgets.QHBoxLayout()
         self.yhbox = QtWidgets.QHBoxLayout()
+        self.color_hbox = QtWidgets.QHBoxLayout()
         self.options_box = QtWidgets.QHBoxLayout()
         self.lab_box = QtWidgets.QHBoxLayout()
         self.xlim_box = QtWidgets.QHBoxLayout()
@@ -71,6 +81,7 @@ class EditConfigDialog(QtWidgets.QDialog):
 
         self.combo.activated.connect(self.change_list_view)
         self.item_list.currentRowChanged.connect(self.populate_signal_fields)
+        self.color_button.clicked.connect(self.open_color_dialog)
         self.hello = 100
 
 
@@ -93,6 +104,10 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.xlim_check.setText("X Limits")
         self.ylim_check.setText("Y Limits")
 
+        self.color_label.setText("Color: ")
+        self.color_chosen.setText("                     ")
+        self.color_button.setText("Select a Color")
+        self.color_button.setIcon(QtGui.QIcon("Icons/color-swatch.png"))
         # I'm annoyed that I have to do this!
         #self.xlim_low.setRange(-1e100, 1e100)
         #self.xlim_high.setRange(-1e100, 1e100)
@@ -104,6 +119,11 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.ylim_low.setDecimals(4)
         self.ylim_high.setDecimals(4)
 
+        self.color_hbox.addWidget(self.color_label)
+        self.color_hbox.addWidget(self.color_input)
+        self.color_hbox.addWidget(self.color_chosen)
+        self.color_hbox.addWidget(self.color_button)
+        self.color_hbox.addStretch()
 
         self.hbox.addWidget(self.combo_label)
         self.hbox.addWidget(self.combo)
@@ -142,11 +162,13 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.vbox.addLayout(self.lab_box)
         self.vbox.addLayout(self.xhbox)
         self.vbox.addLayout(self.yhbox)
+        self.vbox.addLayout(self.color_hbox)
         self.vbox.addWidget(self.buttons)
         self.setLayout(self.vbox)
 
         self.populate_list_box(self.grid[0])
         self.populate_options(0)
+        self.populate_signal_fields(0)
 
     def change_list_view(self, idx):
         text = self.grid[idx]
@@ -201,7 +223,7 @@ class EditConfigDialog(QtWidgets.QDialog):
             self.ylim_high.setEnabled(False)
 
     def populate_list_box(self, key):
-        ignore_items = ['xlabel', 'ylabel', 'legend', 'xlim', 'ylim']
+        ignore_items = ['xlabel', 'ylabel', 'legend', 'xlim', 'ylim', 'color']
         pos_items = [x for x in self.config[key] if x not in ignore_items]
         pos_items.sort()
 
@@ -226,11 +248,22 @@ class EditConfigDialog(QtWidgets.QDialog):
             if 'y' in keys:
                 self.y_input.setText(local_config['y'])
 
+            if 'color' in keys:
+                self.color_chosen.setStyleSheet("QWidget { background-color: %s;\n border:1px solid rgb(0, 0, 0)}" % local_config['color'])
+                self.color_input.setText(local_config['color'])
+            else:
+                color_idx = (idx-1) % 10
+                self.color_chosen.setStyleSheet("QWidget { background-color: %s;\n border:1px solid rgb(0, 0, 0)}" % default_colors[color_idx])
+                self.color_input.setText(default_colors[color_idx])
+
             self.label.setText(label)
         else:
             self.x_input.clear()
             self.y_input.clear()
             self.label.clear()
+
+            self.color_chosen.setStyleSheet("QWidget { background-color: #D3D3D3 ;\n border:1px solid rgb(0, 0, 0)}")
+            self.color_input.setText("#D3D3D3")
 
     def handle_apply_event(self):
         idx = self.item_list.currentRow()
@@ -246,6 +279,7 @@ class EditConfigDialog(QtWidgets.QDialog):
 
         pos = self.combo.currentText()
         item = self.item_list.currentItem()
+        color = self.color_input.text()
 
         if ytext and xtext and label:
             if idx != 0:
@@ -254,6 +288,7 @@ class EditConfigDialog(QtWidgets.QDialog):
             self.config[pos][label] = {}
             self.config[pos][label]['x'] = xtext
             self.config[pos][label]['y'] = ytext
+            self.config[pos][label]['color'] = color
         else:
             if idx != 0:
                 print("I should delete")
@@ -268,7 +303,6 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.config[pos]['legend'] = legend
         self.config[pos]['xlabel'] = xlabel
         self.config[pos]['ylabel'] = ylabel
-
         if self.xlim_check.isChecked():
             xlow = self.xlim_low.value()
             xhigh = self.xlim_high.value()
@@ -298,9 +332,15 @@ class EditConfigDialog(QtWidgets.QDialog):
             self.ylim_low.setDisabled(True)
             self.ylim_high.setDisabled(True)
 
+    def open_color_dialog(self):
+        dlg = QtWidgets.QColorDialog()
+        for idx, color in enumerate(default_colors):
+            dlg.setCustomColor(idx, QtGui.QColor(color))
 
-
-
+        if dlg.exec_():
+            color = dlg.selectedColor().name()
+            self.color_chosen.setStyleSheet("QWidget { background-color: %s;\n border:1px solid rgb(0, 0, 0)}" % color)
+            self.color_input.setText(color)
 
 
 
