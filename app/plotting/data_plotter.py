@@ -3,16 +3,16 @@ from distutils.util import strtobool
 from resample import DataDisplayDownsampler
 import numpy as np
 
-def plot_all_data(axs, locs, data):
+def plot_all_data(axs, locs, data, downsampling=1000):
     down_samplers = []
     for idx, pos in enumerate(locs):
         i, j = (int(x) for x in pos)
-        down_samplers += [plot(axs[i][j], locs[pos], data[pos])]
+        down_samplers += [plot(axs[i][j], locs[pos], data[pos], downsampling=downsampling)]
 
     return down_samplers
 
 
-def plot(ax, info_dict, data):
+def plot(ax, info_dict, data, downsampling=1000):
     info_keys = info_dict.keys()
 
     actual_data = []
@@ -29,9 +29,8 @@ def plot(ax, info_dict, data):
 
             if d.time[-1] > xend:
                 xend = d.time[-1]
-    print(actual_data)
     # Only include signals with data, no empty arrays
-    down_sampler = DataDisplayDownsampler(actual_data, xend - xstart)
+    down_sampler = DataDisplayDownsampler(actual_data, xend - xstart, max_points=downsampling)
 
     for d in actual_data:
         x, y = down_sampler.downsample(d, xstart, xend)

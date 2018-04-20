@@ -7,7 +7,7 @@ from scientificspin import ScientificDoubleSpinBox
 
 class EditConfigDialog(QtWidgets.QDialog):
 
-    def __init__(self, config):
+    def __init__(self, config, xloc=None, yloc=None):
         super(EditConfigDialog, self).__init__()
         self.config = deepcopy(config)
 
@@ -67,16 +67,14 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.lab_box = QtWidgets.QHBoxLayout()
         self.xlim_box = QtWidgets.QHBoxLayout()
         self.ylim_box = QtWidgets.QHBoxLayout()
-        self.init_UI()
+        self.init_UI(xloc=xloc, yloc=yloc)
 
         self.combo.activated.connect(self.change_list_view)
         self.item_list.currentRowChanged.connect(self.populate_signal_fields)
         self.hello = 100
 
-    def print_hello(self):
-        print("hello")
 
-    def init_UI(self):
+    def init_UI(self, xloc=None, yloc=None):
         self.x_qlabel.setText("X: ")
         self.y_qlabel.setText("Y: ")
 
@@ -85,7 +83,11 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.ylab.setText("Y Label: ")
         self.lab.setText("Signal Name")
         self.combo_label.setText("Plot: ")
-        self.setGeometry(200, 200, 500, 200)
+        if xloc is None:
+            xloc = 200
+        if yloc is None:
+            yloc = 200
+        self.setGeometry(xloc, yloc, 500, 200)
         self.setWindowTitle('Edit Configuration')
 
         self.xlim_check.setText("X Limits")

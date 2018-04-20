@@ -4,7 +4,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 class NewConfigDialog(QtWidgets.QDialog):
 
-    def __init__(self):
+    def __init__(self, xloc=None, yloc=None):
         super(NewConfigDialog, self).__init__()
         # Defaults
         self.nrows = 2
@@ -33,15 +33,19 @@ class NewConfigDialog(QtWidgets.QDialog):
         self.hbox_server = QtWidgets.QHBoxLayout()
         self.hbox_event = QtWidgets.QHBoxLayout()
         self.vbox = QtWidgets.QVBoxLayout()
-        self.init_UI()
+        self.init_UI(xloc=xloc, yloc=yloc)
 
         self.row_input.valueChanged.connect(self.update_row)
         self.col_input.valueChanged.connect(self.update_col)
         self.server_input.editingFinished.connect(self.update_server)
         self.event_input.editingFinished.connect(self.update_event)
 
-    def init_UI(self):
-        self.setGeometry(200, 200, 500, 100)
+    def init_UI(self, xloc=None, yloc=None):
+        if xloc is None:
+            xloc = 200
+        if yloc is None:
+            yloc = 200
+        self.setGeometry(xloc, yloc, 500, 100)
         self.setWindowTitle('New Configuration')
 
         self.row_label.setText("Number of Rows: ")

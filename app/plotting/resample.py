@@ -3,8 +3,12 @@ import matplotlib.pyplot as plt
 
 
 class DataDisplayDownsampler(object):
-    def __init__(self, data_list, delta):
-        self.max_points = 500
+    def __init__(self, data_list, delta, max_points=1000):
+        if max_points < 1:
+            self.max_points = 1000
+        else:
+            self.max_points = int(max_points)
+
         self.delta = delta
         self.data = data_list
         self.lines = []
@@ -30,14 +34,13 @@ class DataDisplayDownsampler(object):
         xdata = xdata[::ratio]
         ydata = ydata[::ratio]
 
-        print("using {} of {} visible points".format(
-            len(ydata), np.sum(mask)))
+        # print("using {} of {} visible points".format(
+        #     len(ydata), np.sum(mask)))
 
         return xdata, ydata
 
     def update(self, ax):
         lims = ax.viewLim
-        print(lims.intervalx)
         if np.abs(lims.width - self.delta) > 1e-8:
             self.delta = lims.width
             xstart, xend = lims.intervalx

@@ -10,7 +10,7 @@ from ..plotting import data_plotter
 import events
 from edit_configuration import EditConfigDialog
 from new_configuration import NewConfigDialog
-
+from downsample_dialog import EditDownsampleDialog
 
 class MyWindow(QtWidgets.QMainWindow):
 
@@ -22,9 +22,13 @@ class MyWindow(QtWidgets.QMainWindow):
         self.event_name = None
         self.server = None
         self.config = None
+        self.event = None
         self.config_filename = config_file
         self.threadpool = QtCore.QThreadPool()  # This is where the grabbing of data will take place to not lock the gui
         self.down_samplers = None
+        self.downsampling_points = 1000
+        self.node_locs = None
+        self.data = None
 
         if shot_number is None:
             self.shot_number = mdsh.get_current_shot()
@@ -34,38 +38,24 @@ class MyWindow(QtWidgets.QMainWindow):
         # Menu Bar stuff
         self.menu = self.menuBar()
         self.file_menu = self.menu.addMenu("&File")
-        self.open_config_action = QtWidgets.QAction(QtGui.QIcon("Icons/blue-folder-horizontal-open.png"), "&Open Configuration...", self)
+        self.open_config_action = QtWidgets.QAction(QtGui.QIcon("Icons/blue-folder-horizontal-open.png"),
+                                                    "&Open Configuration...", self)
         self.open_config_action.triggered.connect(self.onOpenClick)
         self.option_menu = self.menu.addMenu("&Options")
         self.shareX_action = QtWidgets.QAction("&Share X-axis", self)
         self.autoUpdate_action = QtWidgets.QAction("&Auto Update", self)
-        self.option_menu.addAction(self.autoUpdate_action)
-        self.option_menu.addAction(self.shareX_action)
-        self.autoUpdate_action.setCheckable(True)
-        self.shareX_action.setCheckable(True)
-        self.openPanelConfigAction = QtWidgets.QAction(QtGui.QIcon("Icons/application--pencil"), "&Edit Configuration", self)
+        self.openPanelConfigAction = QtWidgets.QAction(QtGui.QIcon("Icons/application--pencil"),
+                                                       "&Edit Configuration", self)
         self.save_action = QtWidgets.QAction(QtGui.QIcon("Icons/disk-black.png"), "&Save...", self)
-
         self.save_as_action = QtWidgets.QAction(QtGui.QIcon("Icons/disks-black.png"), "Save As...", self)
         self.centralWidget = QtWidgets.QWidget()
-        self.new_config_action = QtWidgets.QAction(QtGui.QIcon("Icons/application--plus.png"), "&New Configuration...", self)
-
-        self.file_menu.addAction(self.new_config_action)
-        self.file_menu.addAction(self.open_config_action)
-        self.file_menu.addAction(self.openPanelConfigAction)
-        self.file_menu.addAction(self.save_action)
-        self.file_menu.addAction(self.save_as_action)
+        self.new_config_action = QtWidgets.QAction(QtGui.QIcon("Icons/application--plus.png"),
+                                                   "&New Configuration...", self)
+        self.change_downsample = QtWidgets.QAction("Edit Downsampling", self)
 
         self.spinBox = QtWidgets.QSpinBox(self)
-        self.spinBox.setRange(0, 999999)
-        self.spinBox.setKeyboardTracking(False)
+        self.font = self.spinBox.font()
 
-        if self.shot_number is not None:
-            self.spinBox.setValue(self.shot_number)
-
-        # self.shareX = QtWidgets.QCheckBox("Share X-Axis", self)
-        # self.binned = QtWidgets.QCheckBox("Binned?", self)
-        # self.autoUpdate = QtWidgets.QCheckBox("Auto Update", self)
         self.updateBtn = QtWidgets.QPushButton("Update", self)
         self.updateBtn.setIcon(QtGui.QIcon("Icons/arrow-circle-225.png"))
         self.status = QtWidgets.QLabel("Idle", self)
@@ -75,7 +65,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.shot_number_label = QtWidgets.QLabel()
 
         self.vbox = QtWidgets.QVBoxLayout()
-        self.initalize_layout()
+        self.init_UI()
 
         self.figure = None
         self.canvas = None
@@ -83,16 +73,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.axs = None
 
         self.setGeometry(100, 100, 1200, 1200)
-
-        self.font = self.spinBox.font()
-        self.font.setPointSize(18)
-        self.spinBox.setFont(self.font)
-        self.status.setFont(self.font)
-        self.updateBtn.setFont(self.font)
-        self.shot_number_label.setFont(self.font)
-
-        if self.shot_number is not None:
-            self.shot_number_label.setText("Shot Number: {0:d}".format(self.shot_number))
 
         if config_file is not None:
             self.load_configuration(config_file)
@@ -111,16 +91,65 @@ class MyWindow(QtWidgets.QMainWindow):
         self.save_action.triggered.connect(self.save_configuration)
         self.save_as_action.triggered.connect(self.save_as_configuration)
         self.new_config_action.triggered.connect(self.new_configuration)
+        self.change_downsample.triggered.connect(self.open_change_downsample)
 
         self.show()
 
+    def init_UI(self):
+        # Add all of the file actions to the file menu
+
+        self.file_menu.addAction(self.new_config_action)
+        self.file_menu.addAction(self.open_config_action)
+        self.file_menu.addAction(self.openPanelConfigAction)
+        self.file_menu.addAction(self.save_action)
+        self.file_menu.addAction(self.save_as_action)
+
+        # Add all of the option actions to the action menu
+        self.option_menu.addAction(self.autoUpdate_action)
+        self.option_menu.addAction(self.shareX_action)
+        self.option_menu.addAction(self.change_downsample)
+
+        self.autoUpdate_action.setCheckable(True)
+        self.shareX_action.setCheckable(True)
+        self.spinBox.setRange(0, 999999)
+        self.spinBox.setKeyboardTracking(False)
+
+        if self.shot_number is not None:
+            self.spinBox.setValue(self.shot_number)
+            self.shot_number_label.setText("Shot Number: {0:d}".format(self.shot_number))
+
+        # Take care of fonts here
+        self.font.setPointSize(18)
+        self.spinBox.setFont(self.font)
+        self.status.setFont(self.font)
+        self.updateBtn.setFont(self.font)
+        self.shot_number_label.setFont(self.font)
+
+        # Shot number and Status Stuff
+        self.hbox.addWidget(self.spinBox)
+        self.hbox.addWidget(self.updateBtn)
+        self.hbox.addWidget(self.status)
+        self.hbox.addStretch(1)
+
+        # Displayed shot
+        self.shot_hbox.addStretch()
+        self.shot_hbox.addWidget(self.shot_number_label)
+        self.shot_hbox.addStretch()
+
+        # Add everything to the vertical box layout
+        self.vbox.addLayout(self.shot_hbox)
+        self.vbox.addStretch()
+        self.vbox.addLayout(self.hbox)
+        self.centralWidget.setLayout(self.vbox)
+        self.setCentralWidget(self.centralWidget)
+
     def new_configuration(self):
-        dlg = NewConfigDialog()
+        xloc, yloc = self.new_dialog_positions()
+        dlg = NewConfigDialog(xloc=xloc, yloc=yloc)
 
         if dlg.exec_():
-            print(dlg.nrows, dlg.ncols, dlg.server, dlg.event)
             self.config_filename = None
-            new_config = {}
+            new_config = dict()
             new_config['setup'] = {'nrows': dlg.nrows,
                                    'ncols': dlg.ncols,
                                    'server': dlg.server,
@@ -133,39 +162,28 @@ class MyWindow(QtWidgets.QMainWindow):
             self.config = new_config
             self.node_locs = self.get_data_locs()
             self.update_subplot_config(dlg.nrows, dlg.ncols)
-            print(self.node_locs)
             self.fetch_data(self.shot_number)
 
     def edit_configuration(self):
-        dlg = EditConfigDialog(self.config)
+        xloc, yloc = self.new_dialog_positions()
+        dlg = EditConfigDialog(self.config, xloc=xloc, yloc=yloc)
         if dlg.exec_():
             self.config = dlg.config
             self.node_locs = self.get_data_locs()
             self.fetch_data(self.shot_number)
 
-    def initalize_layout(self):
-        self.hbox.addWidget(self.spinBox)
-        self.hbox.addWidget(self.updateBtn)
-        self.hbox.addWidget(self.status)
-        self.hbox.addStretch(1)
-
-        self.shot_hbox.addStretch()
-        self.shot_hbox.addWidget(self.shot_number_label)
-        self.shot_hbox.addStretch()
-
-        self.vbox.addLayout(self.shot_hbox)
-        self.vbox.addStretch()
-        self.vbox.addLayout(self.hbox)
-        self.centralWidget.setLayout(self.vbox)
-        self.setCentralWidget(self.centralWidget)
-
+    def new_dialog_positions(self):
+        rect = self.geometry()
+        xloc = rect.x() + 0.1 * rect.width()
+        yloc = rect.y() + 0.1 * rect.height()
+        return xloc, yloc
 
     def onOpenClick(self):
         dlg = QtWidgets.QFileDialog()
         dlg.setFileMode(QtWidgets.QFileDialog.AnyFile)
         dlg.setNameFilters(["Config Files (*.ini)", "Text files (*.txt)"])
         dlg.selectNameFilter("Config Files (*.ini)")
-        files = []
+        files = list()
 
         if dlg.exec_():
             filenames = dlg.selectedFiles()
@@ -190,7 +208,6 @@ class MyWindow(QtWidgets.QMainWindow):
         config = ConfigObj(filename)
         config = config.dict()
         self.config = config
-        print(config['00'])
         nrow = int(self.config['setup']['nrow'])
         ncol = int(self.config['setup']['ncol'])
         self.event = self.config['setup']['event']
@@ -238,6 +255,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def handle_mdsplus_data(self, data):
         print('i have the data')
+        self.data = data
         axs = self.axs
         for axes in axs:
             for ax in axes:
@@ -245,7 +263,9 @@ class MyWindow(QtWidgets.QMainWindow):
         if data is None:
             self.status.setText("Error opening Shot {0:d}".format(self.shot_number))
         else:
-            self.down_samplers = data_plotter.plot_all_data(axs, self.node_locs, data)
+            print('plotting data now')
+            self.down_samplers = data_plotter.plot_all_data(axs, self.node_locs, data,
+                                                            downsampling=self.downsampling_points)
 
         #self.figure.suptitle("Shot {0:d}".format(self.shot_number))
         self.shot_number_label.setText("Shot {0:d}".format(self.shot_number))
@@ -268,7 +288,6 @@ class MyWindow(QtWidgets.QMainWindow):
                     self.mds_update_event.cancel()
                     self.mds_update_event = None
 
-
     def change_sharex(self):
         axs = self.axs
         ax0 = axs[0][0]
@@ -285,8 +304,12 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def update_pressed(self):
         shot_number = self.spinBox.value()
-        self.shot_number = shot_number
-        self.fetch_data(shot_number)
+        if shot_number == self.shot_number and self.data is not None:
+            # No change, just replot
+            self.handle_mdsplus_data(self.data)
+        else:
+            self.shot_number = shot_number
+            self.fetch_data(shot_number)
 
     def save_as_configuration(self):
         self.save_as_dialog = QtWidgets.QFileDialog()
@@ -308,3 +331,13 @@ class MyWindow(QtWidgets.QMainWindow):
         config_obj.update(self.config)
         config_obj.write()
 
+    def open_change_downsample(self):
+        xloc, yloc = self.new_dialog_positions()
+        dlg = EditDownsampleDialog(self.downsampling_points, xloc=xloc, yloc=yloc)
+        if dlg.exec_():
+            self.downsampling_points = dlg.points
+
+            if self.data is not None:
+                self.handle_mdsplus_data(self.data)
+            else:
+                self.fetch_data(self.shot_number)
