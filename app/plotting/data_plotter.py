@@ -1,17 +1,47 @@
 from __future__ import division, print_function
 from distutils.util import strtobool
+from resample import DataDisplayDownsampler
+import numpy as np
 
 def plot_all_data(axs, locs, data):
-    for pos in locs:
+    down_samplers = []
+    for idx, pos in enumerate(locs):
         i, j = (int(x) for x in pos)
-        plot(axs[i][j], locs[pos], data[pos])
+        down_samplers += [plot(axs[i][j], locs[pos], data[pos])]
+
+    return down_samplers
 
 
 def plot(ax, info_dict, data):
     info_keys = info_dict.keys()
+
+    actual_data = []
+    xstart = np.inf
+    xend = -np.inf
+
     for d in data:
         if len(d.data) > 1:
-            ax.plot(d.time, d.data, label=d.name)
+            actual_data += [d]
+
+            # prep xstart and xend
+            if d.time[0] < xstart:
+                xstart = d.time[0]
+
+            if d.time[-1] > xend:
+                xend = d.time[-1]
+    print(actual_data)
+    # Only include signals with data, no empty arrays
+    down_sampler = DataDisplayDownsampler(actual_data, xend - xstart)
+
+    for d in actual_data:
+        x, y = down_sampler.downsample(d, xstart, xend)
+        # line, = ax.plot(d.time, d.data, label=d.name)
+        line, = ax.plot(x, y, label=d.name)
+        down_sampler.lines.append(line)
+
+    # for d in data:
+    #     if len(d.data) > 1:
+    #         ax.plot(d.time, d.data, label=d.name)
 
     lg = None
     if 'legend' in info_keys and strtobool(info_dict['legend']):
@@ -36,4 +66,9 @@ def plot(ax, info_dict, data):
         ylim = [float(y) for y in ylim]
         ax.set_ylim(ylim)
 
+    if len(down_sampler.lines) > 0:
+        ax.set_autoscale_on(False)
+        ax.callbacks.connect('xlim_changed', down_sampler.update)
+
+    return down_sampler
 

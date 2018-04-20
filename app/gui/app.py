@@ -24,6 +24,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.config = None
         self.config_filename = config_file
         self.threadpool = QtCore.QThreadPool()  # This is where the grabbing of data will take place to not lock the gui
+        self.down_samplers = None
 
         if shot_number is None:
             self.shot_number = mdsh.get_current_shot()
@@ -225,6 +226,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(int)
     def fetch_data(self, shot_number):
+        self.down_samplers = None
         print('grabbing data')
         self.shot_number = shot_number
         self.spinBox.setValue(shot_number)
@@ -243,7 +245,8 @@ class MyWindow(QtWidgets.QMainWindow):
         if data is None:
             self.status.setText("Error opening Shot {0:d}".format(self.shot_number))
         else:
-            data_plotter.plot_all_data(axs, self.node_locs, data)
+            self.down_samplers = data_plotter.plot_all_data(axs, self.node_locs, data)
+
         #self.figure.suptitle("Shot {0:d}".format(self.shot_number))
         self.shot_number_label.setText("Shot {0:d}".format(self.shot_number))
         self.figure.tight_layout()
