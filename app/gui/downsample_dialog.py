@@ -44,7 +44,7 @@ class EditDownsampleDialog(QtWidgets.QDialog):
         self.vbox.addWidget(self.buttons)
         self.setLayout(self.vbox)
 
-        self.setGeometry(xloc, yloc, 150, 100)
+        self.setGeometry(xloc, yloc, 300, 100)
 
     def points_change(self, value):
         self.points = value
