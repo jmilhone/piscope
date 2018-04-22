@@ -1,6 +1,6 @@
+from __future__ import division, print_function
 import MDSplus as mds
 from data import Data
-
 
 def get_current_shot():
     try:
@@ -9,6 +9,33 @@ def get_current_shot():
         return None
     return current_shot
 
+def retrieve_signals(shot_number, loc_dict, loc_name, server):
+    ignore_items = ['legend', 'xlabel', 'ylabel', 'xlim', 'ylim', 'color']
+    print("im here")
+    data = dict()
+    try:
+        con = mds.Connection(server)
+        con.openTree("wipal", shot_number)
+    except mds.MdsIpException, e:
+        return None
+
+    temp_data = list()
+    for name in loc_dict:
+        if name.lower() not in ignore_items:
+            temp_data.append(retrieve_data(con, loc_dict[name], name))
+
+    return loc_name, temp_data
+
+def retrieve_signal(shot_number, signal_info, loc_name, signal_name, server):
+
+    try:
+        con = mds.Connection(server)
+        con.openTree("wipal", shot_number)
+    except mds.MdsIpException, e:
+        return None
+    data = retrieve_data(con, signal_info, signal_name)
+
+    return loc_name, signal_name, data
 
 def retrieve_all_data(shot_number, locs, server):
     #try:

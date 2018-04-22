@@ -36,6 +36,10 @@ class MyWindow(QtWidgets.QMainWindow):
         self.node_locs = None
         self.data = None
 
+        # for the progress bar
+        self.n_positions = 0.0
+        self.completion = 0.0
+
         if shot_number is None:
             self.shot_number = mdsh.get_current_shot()
         else:
@@ -68,7 +72,8 @@ class MyWindow(QtWidgets.QMainWindow):
 
         self.hbox = QtWidgets.QHBoxLayout()
         self.shot_hbox = QtWidgets.QHBoxLayout()
-        self.shot_number_label = QtWidgets.QLabel()
+        self.shot_number_label = QtWidgets.QLabel(self)
+        self.progess_bar = QtWidgets.QProgressBar(self)
 
         self.vbox = QtWidgets.QVBoxLayout()
         self.init_UI()
@@ -103,7 +108,6 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def init_UI(self):
         # Add all of the file actions to the file menu
-
         self.file_menu.addAction(self.new_config_action)
         self.file_menu.addAction(self.open_config_action)
         self.file_menu.addAction(self.openPanelConfigAction)
@@ -120,6 +124,8 @@ class MyWindow(QtWidgets.QMainWindow):
         self.spinBox.setRange(0, 999999)
         self.spinBox.setKeyboardTracking(False)
 
+        self.progess_bar.setValue(0.0)
+
         if self.shot_number is not None:
             self.spinBox.setValue(self.shot_number)
             self.shot_number_label.setText("Shot Number: {0:d}".format(self.shot_number))
@@ -130,10 +136,13 @@ class MyWindow(QtWidgets.QMainWindow):
         self.status.setFont(self.font)
         self.updateBtn.setFont(self.font)
         self.shot_number_label.setFont(self.font)
+        self.progess_bar.setFont(self.font)
+        self.progess_bar.setTextVisible(False)
 
         # Shot number and Status Stuff
         self.hbox.addWidget(self.spinBox)
         self.hbox.addWidget(self.updateBtn)
+        self.hbox.addWidget(self.progess_bar)
         self.hbox.addWidget(self.status)
         self.hbox.addStretch(1)
 
@@ -263,19 +272,85 @@ class MyWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(int)
     def fetch_data(self, shot_number):
-        self.down_samplers = None
-        print('grabbing data')
-        self.shot_number = shot_number
-        self.spinBox.setValue(shot_number)
-        node_locs = self.node_locs
+        # self.down_samplers = None
+        # print('grabbing data')
+        # self.shot_number = shot_number
+        # self.spinBox.setValue(shot_number)
+        # node_locs = self.node_locs
+        # self.status.setText("Retrieving Data from Shot {0:d}".format(shot_number))
+        # worker = Worker(mdsh.retrieve_all_data, shot_number, node_locs, self.server)
+        # worker.signals.result.connect(self.handle_mdsplus_data)
+        # self.threadpool.start(worker)
+
         self.status.setText("Retrieving Data from Shot {0:d}".format(shot_number))
-        worker = Worker(mdsh.retrieve_all_data, shot_number, node_locs, self.server)
-        worker.signals.result.connect(self.handle_mdsplus_data)
-        self.threadpool.start(worker)
+        node_locs = self.node_locs
+        keys = node_locs.keys()
+        ignore_items = ['legend', 'xlabel', 'ylabel', 'xlim', 'ylim', 'color']
+        self.data = dict()
+        self.completion = 0
+        self.n_positions = 0
+        # First loop through and count the number of signals
+        for k in keys:
+            self.data[k] = None
+            for name in node_locs[k]:
+                if name not in ignore_items:
+                    self.n_positions += 1
+
+        # Now reloop over and start the workers
+        for k in keys:
+            for name in node_locs[k]:
+                if name not in ignore_items:
+                    print("")
+                    print(node_locs[k][name])
+                    print(k)
+                    print(name)
+                    print("")
+                    worker = Worker(mdsh.retrieve_signal, shot_number, node_locs[k][name], k, name, self.server)
+                    worker.signals.result.connect(self.handle_returning_data)
+                    self.threadpool.start(worker)
+
+        # node_locs = self.node_locs
+        # keys = node_locs.keys()
+        # self.data = dict()
+        # self.n_positions = len(keys)
+        # self.completion = 0.0
+        # self.progess_bar.setValue(self.completion)
+
+        # for loc in keys:
+        #     worker = Worker(mdsh.retrieve_signals, shot_number, node_locs[loc], loc, self.server)
+        #     worker.signals.result.connect(self.handle_returning_data)
+        #     self.threadpool.start(worker)
+        # print(self.threadpool.maxThreadCount())
+
+    def handle_returning_data(self, data_tuple):
+        self.completion += 1
+
+        self.progess_bar.setValue(self.completion / self.n_positions * 100.0)
+        # unpack data_tuple
+        loc, name, data = data_tuple
+        if self.data[loc] is None:
+            # need to initialize the dict
+            self.data[loc] = list()
+        self.data[loc].append(data)
+
+        if self.completion == self.n_positions:
+            print("I should plot now")
+            self.handle_mdsplus_data(self.data)
+        # self.completion += 1
+
+        # self.progess_bar.setValue(self.completion / self.n_positions * 100.0)
+        # print(data_tuple[0], len(data_tuple[1]))
+        # self.data[data_tuple[0]] = data_tuple[1]
+        # if self.completion == self.n_positions:
+        #     print("I should plot now!")
+        #     self.handle_mdsplus_data(self.data)
+
+
 
     def handle_mdsplus_data(self, data):
         print('i have the data')
         self.data = data
+
         axs = self.axs
         for axes in axs:
             for ax in axes:
@@ -295,6 +370,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.toolbar.push_current()
         self.canvas.draw()
         self.status.setText("Idle")
+        self.progess_bar.setValue(0.0)
 
     def change_auto_update(self, state):
         if self.event_name:

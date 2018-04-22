@@ -20,6 +20,7 @@ def plot(ax, info_dict, data, downsampling=1000):
     xend = -np.inf
 
     for d in data:
+        print(d)
         if len(d.data) > 1:
             actual_data += [d]
 
