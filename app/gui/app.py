@@ -11,7 +11,7 @@ import events
 from edit_configuration import EditConfigDialog
 from new_configuration import NewConfigDialog
 from downsample_dialog import EditDownsampleDialog
-
+import MDSplus as mds
 
 default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
                   '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
@@ -23,7 +23,7 @@ class MyWindow(QtWidgets.QMainWindow):
     def __init__(self, config_file, shot_number=None):
         super(MyWindow, self).__init__()
         self.setWindowTitle("Big Red Ball PiScope")
-
+        self.setWindowIcon(QtGui.QIcon("Icons/application-wave.png"))
         # Useful configuration things
         self.event_name = None
         self.server = None
@@ -283,6 +283,12 @@ class MyWindow(QtWidgets.QMainWindow):
         # self.threadpool.start(worker)
 
         self.status.setText("Retrieving Data from Shot {0:d}".format(shot_number))
+        #try:
+        #    con = mds.Connection(self.server)
+        #    con.openTree("wipal", shot_number)
+        #except mds.MDSIpException, e:
+        #    self.handle_mdsplus_data(None)
+
         node_locs = self.node_locs
         keys = node_locs.keys()
         ignore_items = ['legend', 'xlabel', 'ylabel', 'xlim', 'ylim', 'color']
@@ -306,6 +312,7 @@ class MyWindow(QtWidgets.QMainWindow):
                     print(name)
                     print("")
                     worker = Worker(mdsh.retrieve_signal, shot_number, node_locs[k][name], k, name, self.server)
+                    #worker = Worker(mdsh.retrieve_signal, shot_number, node_locs[k][name], k, name, con)
                     worker.signals.result.connect(self.handle_returning_data)
                     self.threadpool.start(worker)
 

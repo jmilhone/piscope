@@ -6,6 +6,7 @@ class NewConfigDialog(QtWidgets.QDialog):
 
     def __init__(self, xloc=None, yloc=None):
         super(NewConfigDialog, self).__init__()
+        self.setWindowIcon(QtGui.QIcon("Icons/application-wave.png"))
         # Defaults
         self.nrows = 2
         self.ncols = 2

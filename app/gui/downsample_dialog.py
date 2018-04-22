@@ -6,6 +6,7 @@ class EditDownsampleDialog(QtWidgets.QDialog):
 
     def __init__(self, points, xloc=None, yloc=None):
         super(EditDownsampleDialog, self).__init__()
+        self.setWindowIcon(QtGui.QIcon("Icons/application-wave.png"))
         self.buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
                                                   QtWidgets.QDialogButtonBox.Cancel)
         self.hbox = QtWidgets.QHBoxLayout()

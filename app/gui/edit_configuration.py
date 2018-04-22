@@ -13,6 +13,7 @@ class EditConfigDialog(QtWidgets.QDialog):
     def __init__(self, config, xloc=None, yloc=None):
         super(EditConfigDialog, self).__init__()
         self.config = deepcopy(config)
+        self.setWindowIcon(QtGui.QIcon("Icons/application-wave.png"))
 
         grid = config.keys()
         grid = [x for x in grid if x != 'setup']
