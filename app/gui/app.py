@@ -165,18 +165,19 @@ class MyWindow(QtWidgets.QMainWindow):
         if dlg.exec_():
             self.config_filename = None
             new_config = dict()
-            new_config['setup'] = {'nrows': dlg.nrows,
-                                   'ncols': dlg.ncols,
+            new_config['setup'] = {'nrow': dlg.nrow,
+                                   'ncol': dlg.ncol,
                                    'server': dlg.server,
                                    'event': dlg.event,
                                    }
-            for i in range(dlg.nrows):
-                for j in range(dlg.ncols):
+            for i in range(dlg.nrow):
+                for j in range(dlg.ncol):
                     new_config['{0:d}{1:d}'.format(i, j)] = {}
 
             self.config = new_config
+            self.enable_actions_after_config()
             self.node_locs = self.get_data_locs()
-            self.update_subplot_config(dlg.nrows, dlg.ncols)
+            self.update_subplot_config(dlg.nrow, dlg.ncol)
             self.fetch_data(self.shot_number)
 
     def edit_configuration(self):
@@ -205,19 +206,22 @@ class MyWindow(QtWidgets.QMainWindow):
             self.config_filename = filenames[0]
             self.load_configuration(filenames[0])
 
+    def enable_actions_after_config(self):
+        self.updateBtn.setEnabled(True)
+        self.shareX_action.setEnabled(True)
+        self.autoUpdate_action.setEnabled(True)
+        self.openPanelConfigAction.setEnabled(True)
+        self.save_action.setEnabled(True)
+        self.save_as_action.setEnabled(True)
+
     def load_configuration(self, filename):
-            nrow, ncol, locs = self.config_parser(filename)
-            self.updateBtn.setEnabled(True)
-            self.shareX_action.setEnabled(True)
-            self.autoUpdate_action.setEnabled(True)
-            self.openPanelConfigAction.setEnabled(True)
-            self.save_action.setEnabled(True)
-            self.save_as_action.setEnabled(True)
-            self.update_subplot_config(nrow, ncol)
+        nrow, ncol, locs = self.config_parser(filename)
+        self.enable_actions_after_config()
+        self.update_subplot_config(nrow, ncol)
 
-            self.node_locs = locs
+        self.node_locs = locs
 
-            self.fetch_data(self.shot_number)
+        self.fetch_data(self.shot_number)
 
     def config_parser(self, filename):
         config = ConfigObj(filename)
@@ -273,6 +277,7 @@ class MyWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot(int)
     def fetch_data(self, shot_number):
         self.status.setText("Retrieving Data from Shot {0:d}".format(shot_number))
+        self.shot_number = shot_number
 
         node_locs = self.node_locs
         keys = node_locs.keys()
@@ -326,6 +331,7 @@ class MyWindow(QtWidgets.QMainWindow):
                                                             downsampling=self.downsampling_points)
 
         self.shot_number_label.setText("Shot {0:d}".format(self.shot_number))
+        self.spinBox.setValue(self.shot_number)
         self.figure.tight_layout()
 
         self.toolbar.update()
@@ -399,3 +405,4 @@ class MyWindow(QtWidgets.QMainWindow):
                 self.handle_mdsplus_data(self.data)
             else:
                 self.fetch_data(self.shot_number)
+

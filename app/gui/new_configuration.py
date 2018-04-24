@@ -54,8 +54,8 @@ class NewConfigDialog(QtWidgets.QDialog):
         self.server_label.setText("Server Address: ")
         self.event_label.setText("MDSplus Event Name: ")
 
-        self.row_input.setValue(self.nrows)
-        self.col_input.setValue(self.ncols)
+        self.row_input.setValue(self.nrow)
+        self.col_input.setValue(self.ncol)
         self.server_input.setText(self.server)
         self.event_input.setText(self.event)
 
@@ -78,10 +78,10 @@ class NewConfigDialog(QtWidgets.QDialog):
         self.setLayout(self.vbox)
 
     def update_row(self, row):
-        self.nrows = row
+        self.nrow = row
 
     def update_col(self, col):
-        self.ncols = col
+        self.ncol = col
 
     def update_server(self):
         self.server = self.server_input.text()

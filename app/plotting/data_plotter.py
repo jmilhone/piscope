@@ -8,12 +8,15 @@ def plot_all_data(axs, locs, data, downsampling=1000):
     down_samplers = []
     for idx, pos in enumerate(locs):
         i, j = (int(x) for x in pos)
+        print(data[pos])
         down_samplers += [plot(axs[i][j], locs[pos], data[pos], downsampling=downsampling)]
 
     return down_samplers
 
 
 def plot(ax, info_dict, data, downsampling=1000):
+    if data is None:
+        return
     info_keys = info_dict.keys()
 
     actual_data = []
