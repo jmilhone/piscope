@@ -33,17 +33,12 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.y_input = QtWidgets.QLineEdit(self)
 
         self.xlim_check = QtWidgets.QCheckBox(self)
-        # self.xlim_low = QtWidgets.QDoubleSpinBox(self)
-        # self.xlim_high = QtWidgets.QDoubleSpinBox(self)
         self.xlim_low = ScientificDoubleSpinBox(self)
         self.xlim_high = ScientificDoubleSpinBox(self)
 
         self.ylim_check = QtWidgets.QCheckBox(self)
-        # self.ylim_low = QtWidgets.QDoubleSpinBox(self)
-        # self.ylim_high = QtWidgets.QDoubleSpinBox(self)
         self.ylim_low = ScientificDoubleSpinBox(self)
         self.ylim_high = ScientificDoubleSpinBox(self)
-
 
         self.xlabel = QtWidgets.QLineEdit(self)
         self.ylabel = QtWidgets.QLineEdit(self)
@@ -109,11 +104,6 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.color_chosen.setText("                     ")
         self.color_button.setText("Select a Color")
         self.color_button.setIcon(QtGui.QIcon("Icons/color-swatch.png"))
-        # I'm annoyed that I have to do this!
-        #self.xlim_low.setRange(-1e100, 1e100)
-        #self.xlim_high.setRange(-1e100, 1e100)
-        #self.ylim_low.setRange(-1e100, 1e100)
-        #self.ylim_high.setRange(-1e100, 1e100)
 
         self.xlim_low.setDecimals(4)
         self.xlim_high.setDecimals(4)
@@ -209,7 +199,6 @@ class EditConfigDialog(QtWidgets.QDialog):
             self.xlim_low.setEnabled(False)
             self.xlim_high.setEnabled(False)
 
-
         if "ylim" in keys:
             self.ylim_check.setChecked(True)
             self.ylim_low.setEnabled(True)
@@ -271,12 +260,6 @@ class EditConfigDialog(QtWidgets.QDialog):
         xtext = self.x_input.text()
         ytext = self.y_input.text()
         label = self.label.text()
-
-        #if not (ytext and label):
-        #    self.error_dialog = QtWidgets.QErrorMessage()
-        #    self.error_dialog.setWindowModality(QtCore.Qt.WindowModal)
-        #    self.error_dialog.showMessage('You did not fill in the necessary fields (y and label)!')
-        #    return
 
         pos = self.combo.currentText()
         item = self.item_list.currentItem()
@@ -342,16 +325,4 @@ class EditConfigDialog(QtWidgets.QDialog):
             color = dlg.selectedColor().name()
             self.color_chosen.setStyleSheet("QWidget { background-color: %s;\n border:1px solid rgb(0, 0, 0)}" % color)
             self.color_input.setText(color)
-
-
-
-
-
-
-
-
-
-
-
-
 

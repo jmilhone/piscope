@@ -8,8 +8,8 @@ class NewConfigDialog(QtWidgets.QDialog):
         super(NewConfigDialog, self).__init__()
         self.setWindowIcon(QtGui.QIcon("Icons/application-wave.png"))
         # Defaults
-        self.nrows = 2
-        self.ncols = 2
+        self.nrow = 2
+        self.ncol = 2
         self.server = '192.168.113.62'
         self.event = 'raw_data_ready'
 

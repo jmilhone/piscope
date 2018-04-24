@@ -11,7 +11,6 @@ import events
 from edit_configuration import EditConfigDialog
 from new_configuration import NewConfigDialog
 from downsample_dialog import EditDownsampleDialog
-import MDSplus as mds
 
 default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
                   '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
@@ -28,7 +27,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.event_name = None
         self.server = None
         self.config = None
-        self.event = None
+        self.mds_update_event = None
         self.config_filename = config_file
         self.threadpool = QtCore.QThreadPool()  # This is where the grabbing of data will take place to not lock the gui
         self.down_samplers = None
@@ -103,6 +102,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.save_as_action.triggered.connect(self.save_as_configuration)
         self.new_config_action.triggered.connect(self.new_configuration)
         self.change_downsample.triggered.connect(self.open_change_downsample)
+        self.autoUpdate_action.triggered.connect(self.change_auto_update)
 
         self.show()
 
@@ -225,7 +225,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.config = config
         nrow = int(self.config['setup']['nrow'])
         ncol = int(self.config['setup']['ncol'])
-        self.event = self.config['setup']['event']
+        self.event_name = self.config['setup']['event']
         self.server = self.config['setup']['server']
         data_locs = self.get_data_locs()
 
@@ -272,22 +272,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(int)
     def fetch_data(self, shot_number):
-        # self.down_samplers = None
-        # print('grabbing data')
-        # self.shot_number = shot_number
-        # self.spinBox.setValue(shot_number)
-        # node_locs = self.node_locs
-        # self.status.setText("Retrieving Data from Shot {0:d}".format(shot_number))
-        # worker = Worker(mdsh.retrieve_all_data, shot_number, node_locs, self.server)
-        # worker.signals.result.connect(self.handle_mdsplus_data)
-        # self.threadpool.start(worker)
-
         self.status.setText("Retrieving Data from Shot {0:d}".format(shot_number))
-        #try:
-        #    con = mds.Connection(self.server)
-        #    con.openTree("wipal", shot_number)
-        #except mds.MDSIpException, e:
-        #    self.handle_mdsplus_data(None)
 
         node_locs = self.node_locs
         keys = node_locs.keys()
@@ -306,28 +291,9 @@ class MyWindow(QtWidgets.QMainWindow):
         for k in keys:
             for name in node_locs[k]:
                 if name not in ignore_items:
-                    print("")
-                    print(node_locs[k][name])
-                    print(k)
-                    print(name)
-                    print("")
                     worker = Worker(mdsh.retrieve_signal, shot_number, node_locs[k][name], k, name, self.server)
-                    #worker = Worker(mdsh.retrieve_signal, shot_number, node_locs[k][name], k, name, con)
                     worker.signals.result.connect(self.handle_returning_data)
                     self.threadpool.start(worker)
-
-        # node_locs = self.node_locs
-        # keys = node_locs.keys()
-        # self.data = dict()
-        # self.n_positions = len(keys)
-        # self.completion = 0.0
-        # self.progess_bar.setValue(self.completion)
-
-        # for loc in keys:
-        #     worker = Worker(mdsh.retrieve_signals, shot_number, node_locs[loc], loc, self.server)
-        #     worker.signals.result.connect(self.handle_returning_data)
-        #     self.threadpool.start(worker)
-        # print(self.threadpool.maxThreadCount())
 
     def handle_returning_data(self, data_tuple):
         self.completion += 1
@@ -343,16 +309,6 @@ class MyWindow(QtWidgets.QMainWindow):
         if self.completion == self.n_positions:
             print("I should plot now")
             self.handle_mdsplus_data(self.data)
-        # self.completion += 1
-
-        # self.progess_bar.setValue(self.completion / self.n_positions * 100.0)
-        # print(data_tuple[0], len(data_tuple[1]))
-        # self.data[data_tuple[0]] = data_tuple[1]
-        # if self.completion == self.n_positions:
-        #     print("I should plot now!")
-        #     self.handle_mdsplus_data(self.data)
-
-
 
     def handle_mdsplus_data(self, data):
         print('i have the data')
@@ -369,7 +325,6 @@ class MyWindow(QtWidgets.QMainWindow):
             self.down_samplers = data_plotter.plot_all_data(axs, self.node_locs, data,
                                                             downsampling=self.downsampling_points)
 
-        #self.figure.suptitle("Shot {0:d}".format(self.shot_number))
         self.shot_number_label.setText("Shot {0:d}".format(self.shot_number))
         self.figure.tight_layout()
 

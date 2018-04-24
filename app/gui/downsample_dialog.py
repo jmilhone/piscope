@@ -22,9 +22,7 @@ class EditDownsampleDialog(QtWidgets.QDialog):
         self.buttons.rejected.connect(self.reject)
         self.points_input.valueChanged.connect(self.points_change)
 
-
     def init_UI(self, xloc=None, yloc=None):
-
         if xloc is None:
             xloc = 200
 
@@ -39,7 +37,6 @@ class EditDownsampleDialog(QtWidgets.QDialog):
 
         self.hbox.addWidget(self.points_label)
         self.hbox.addWidget(self.points_input)
-        #self.hbox.addStretch()
 
         self.vbox.addLayout(self.hbox)
         self.vbox.addWidget(self.buttons)

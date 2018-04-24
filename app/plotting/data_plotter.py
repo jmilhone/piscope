@@ -3,6 +3,7 @@ from distutils.util import strtobool
 from resample import DataDisplayDownsampler
 import numpy as np
 
+
 def plot_all_data(axs, locs, data, downsampling=1000):
     down_samplers = []
     for idx, pos in enumerate(locs):
@@ -20,7 +21,6 @@ def plot(ax, info_dict, data, downsampling=1000):
     xend = -np.inf
 
     for d in data:
-        print(d)
         if len(d.data) > 1:
             actual_data += [d]
 
@@ -35,13 +35,9 @@ def plot(ax, info_dict, data, downsampling=1000):
 
     for d in actual_data:
         x, y = down_sampler.downsample(d, xstart, xend)
-        # line, = ax.plot(d.time, d.data, label=d.name)
         line, = ax.plot(x, y, label=d.name, color=d.color)
         down_sampler.lines.append(line)
 
-    # for d in data:
-    #     if len(d.data) > 1:
-    #         ax.plot(d.time, d.data, label=d.name)
 
     lg = None
     if 'legend' in info_keys and strtobool(info_dict['legend']):
