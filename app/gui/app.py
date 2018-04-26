@@ -312,11 +312,11 @@ class MyWindow(QtWidgets.QMainWindow):
         self.data[loc].append(data)
 
         if self.completion == self.n_positions:
-            print("I should plot now")
+            #print("I should plot now")
             self.handle_mdsplus_data(self.data)
 
     def handle_mdsplus_data(self, data):
-        print('i have the data')
+        #print('i have the data')
         self.data = data
 
         axs = self.axs
@@ -326,7 +326,7 @@ class MyWindow(QtWidgets.QMainWindow):
         if data is None:
             self.status.setText("Error opening Shot {0:d}".format(self.shot_number))
         else:
-            print('plotting data now')
+            #print('plotting data now')
             self.down_samplers = data_plotter.plot_all_data(axs, self.node_locs, data,
                                                             downsampling=self.downsampling_points)
 
