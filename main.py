@@ -26,7 +26,7 @@ if __name__ == "__main__":
     #    import app.gui.magnetics_app as MyApp
     #else:
     #    print("Running discharge")
-    import app.gui.discharge_app as MyApp
+    #import app.gui.discharge_app as MyApp
 
     import app.gui.app as MyApp
 
