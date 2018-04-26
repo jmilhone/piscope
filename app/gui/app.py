@@ -4,13 +4,13 @@ from configobj import ConfigObj
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
-from workers import Worker
+from .workers import Worker
 from ..data import mdsplus_helpers as mdsh
 from ..plotting import data_plotter
-import events
-from edit_configuration import EditConfigDialog
-from new_configuration import NewConfigDialog
-from downsample_dialog import EditDownsampleDialog
+from .events import MyEvent
+from .edit_configuration import EditConfigDialog
+from .new_configuration import NewConfigDialog
+from .downsample_dialog import EditDownsampleDialog
 
 default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
                   '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
@@ -31,7 +31,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.config_filename = config_file
         self.threadpool = QtCore.QThreadPool()  # This is where the grabbing of data will take place to not lock the gui
         self.down_samplers = None
-        self.downsampling_points = 1000
+        self.downsampling_points = 10000
         self.node_locs = None
         self.data = None
 
@@ -245,7 +245,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def parse_data_colors(self, key):
         local_config = self.config[key]
-        keys = local_config.keys()
+        keys = [x for x in local_config.keys()]
         keys.sort()
         top_ignore = ['xlabel', 'ylabel', 'xlim', 'ylim', 'legend']
         j = 0
@@ -345,7 +345,7 @@ class MyWindow(QtWidgets.QMainWindow):
             # if state == QtCore.Qt.Checked:
             if self.autoUpdate_action.isChecked():
                 if self.mds_update_event is None:
-                    self.mds_update_event = events.MyEvent(self.event_name)
+                    self.mds_update_event = MyEvent(self.event_name)
                     self.mds_update_event.sender.emitter.connect(self.fetch_data)
             else:
                 if self.mds_update_event is not None and self.mds_update_event.isAlive():

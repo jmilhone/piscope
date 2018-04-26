@@ -2,7 +2,7 @@ from __future__ import division, print_function
 from PyQt5 import QtCore, QtWidgets, QtGui
 from distutils.util import strtobool
 from copy import deepcopy
-from scientificspin import ScientificDoubleSpinBox
+from .scientificspin import ScientificDoubleSpinBox
 
 default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
                   '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',

@@ -1,11 +1,11 @@
 from __future__ import division, print_function
 import MDSplus as mds
-from data import Data
+from .data import Data
 
 def get_current_shot():
     try:
         current_shot = mds.tree.Tree.getCurrent("wipal")
-    except mds.mdsExceptions.TreeNOCURRENT, e:
+    except mds.mdsExceptions.TreeNOCURRENT as e:
         return None
     return current_shot
 
@@ -16,7 +16,7 @@ def retrieve_signals(shot_number, loc_dict, loc_name, server):
     try:
         con = mds.Connection(server)
         con.openTree("wipal", shot_number)
-    except mds.MdsIpException, e:
+    except mds.MdsIpException as e:
         return None
 
     temp_data = list()
@@ -31,7 +31,7 @@ def retrieve_signal(shot_number, signal_info, loc_name, signal_name, server):
     try:
         con = mds.Connection(server)
         con.openTree("wipal", shot_number)
-    except mds.MdsIpException, e:
+    except mds.MdsIpException as e:
         return None
     data = retrieve_data(con, signal_info, signal_name)
 
@@ -45,7 +45,7 @@ def retrieve_all_data(shot_number, locs, server):
     try:
         con = mds.Connection(server)
         con.openTree("wipal", shot_number)
-    except mds.MdsIpException, e:
+    except mds.MdsIpException as e:
         return None
 
     data = {}
@@ -89,7 +89,7 @@ def retrieve_data(connection, node_loc, name):
         #data_obj = connection.get(node_loc)#.data()
         #data = data_obj.data()
         #t = connection.get("dim_of({0:s})".format(node_loc)).data()
-    except mds.MdsIpException, e:
+    except mds.MdsIpException as e:
         pass
 
     return Data(name, t, data, node_loc['color'])

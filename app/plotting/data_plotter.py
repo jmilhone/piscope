@@ -1,10 +1,10 @@
 from __future__ import division, print_function
 from distutils.util import strtobool
-from resample import DataDisplayDownsampler
+from .resample import DataDisplayDownsampler
 import numpy as np
 
 
-def plot_all_data(axs, locs, data, downsampling=1000):
+def plot_all_data(axs, locs, data, downsampling=10000):
     down_samplers = []
     for idx, pos in enumerate(locs):
         i, j = (int(x) for x in pos)
@@ -13,7 +13,7 @@ def plot_all_data(axs, locs, data, downsampling=1000):
     return down_samplers
 
 
-def plot(ax, info_dict, data, downsampling=1000):
+def plot(ax, info_dict, data, downsampling=10000):
     if data is None:
         return
     info_keys = info_dict.keys()
@@ -37,7 +37,7 @@ def plot(ax, info_dict, data, downsampling=1000):
 
     for d in actual_data:
         x, y = down_sampler.downsample(d, xstart, xend)
-        line, = ax.plot(x, y, label=d.name, color=d.color)
+        line, = ax.plot(x, y, label=d.name, color=d.color, lw=1)
         down_sampler.lines.append(line)
 
 

@@ -1,3 +1,4 @@
+from __future__ import print_function, division
 #import readline
 from MDSplus import Event
 from PyQt5 import QtCore
@@ -11,7 +12,7 @@ class MyEvent(Event):
         self.sender = SenderObject()
 
     def run(self):
-        print "Event happened!"
+        print("Event happened!")
         self.sender.emitter.emit(self.getData())
 
 #e=MyEvent("twf")
