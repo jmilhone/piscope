@@ -56,12 +56,13 @@ class MyWindow(QtWidgets.QMainWindow):
         self.openPanelConfigAction = QtWidgets.QAction(QtGui.QIcon("Icons/application--pencil"),
                                                        "&Edit Configuration", self)
         self.save_action = QtWidgets.QAction(QtGui.QIcon("Icons/disk-black.png"), "&Save...", self)
-        self.save_as_action = QtWidgets.QAction(QtGui.QIcon("Icons/disks-black.png"), "Save As...", self)
-        self.centralWidget = QtWidgets.QWidget()
+        self.save_as_action = QtWidgets.QAction(QtGui.QIcon("Icons/disks-black.png"), "Save As", self)
+        self.exit_action = QtWidgets.QAction("&Quit PiScope", self)
         self.new_config_action = QtWidgets.QAction(QtGui.QIcon("Icons/application--plus.png"),
                                                    "&New Configuration...", self)
         self.change_downsample = QtWidgets.QAction("Edit Downsampling", self)
 
+        self.centralWidget = QtWidgets.QWidget()
         self.spinBox = QtWidgets.QSpinBox(self)
         self.font = self.spinBox.font()
 
@@ -94,7 +95,7 @@ class MyWindow(QtWidgets.QMainWindow):
             self.openPanelConfigAction.setDisabled(True)
             self.save_action.setDisabled(True)
             self.save_as_action.setDisabled(True)
-
+        self.exit_action.setEnabled(True)
         self.updateBtn.clicked.connect(self.update_pressed)
         self.shareX_action.triggered.connect(self.change_sharex)
         self.openPanelConfigAction.triggered.connect(self.edit_configuration)
@@ -103,7 +104,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.new_config_action.triggered.connect(self.new_configuration)
         self.change_downsample.triggered.connect(self.open_change_downsample)
         self.autoUpdate_action.triggered.connect(self.change_auto_update)
-
+        self.exit_action.triggered.connect(self.close)
         self.show()
 
     def init_UI(self):
@@ -113,6 +114,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.file_menu.addAction(self.openPanelConfigAction)
         self.file_menu.addAction(self.save_action)
         self.file_menu.addAction(self.save_as_action)
+        self.file_menu.addAction(self.exit_action)
 
         # Add all of the option actions to the action menu
         self.option_menu.addAction(self.autoUpdate_action)
