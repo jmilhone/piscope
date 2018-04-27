@@ -95,6 +95,9 @@ def retrieve_data(connection, node_loc, name):
         #t = connection.get("dim_of({0:s})".format(node_loc)).data()
     except mds.MdsIpException as e:
         pass
+    except KeyError:
+        data = None
+        t = None
 
     return Data(name, t, data, node_loc['color'])
 
