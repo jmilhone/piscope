@@ -27,6 +27,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.event_name = None
         self.server = None
         self.config = None
+        self.tree = None
         self.mds_update_event = None
         self.config_filename = config_file
         self.threadpool = QtCore.QThreadPool()  # This is where the grabbing of data will take place to not lock the gui
@@ -39,10 +40,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.n_positions = 0.0
         self.completion = 0.0
 
-        if shot_number is None:
-            self.shot_number = mdsh.get_current_shot()
-        else:
-            self.shot_number = shot_number
 
         # Menu Bar stuff
         self.menu = self.menuBar()
@@ -87,6 +84,17 @@ class MyWindow(QtWidgets.QMainWindow):
 
         if config_file is not None:
             self.load_configuration(config_file)
+
+            if shot_number is None:
+                self.shot_number = mdsh.get_current_shot(self.tree)
+            else:
+                self.shot_number = shot_number
+
+            if self.shot_number is not None:
+                self.spinBox.setValue(self.shot_number)
+                self.shot_number_label.setText("Shot Number: {0:d}".format(self.shot_number))
+                self.fetch_data(self.shot_number)
+
         else:
             self.updateBtn.setDisabled(True)
             self.status.setText("Please Load a Configuration File")
@@ -95,6 +103,7 @@ class MyWindow(QtWidgets.QMainWindow):
             self.openPanelConfigAction.setDisabled(True)
             self.save_action.setDisabled(True)
             self.save_as_action.setDisabled(True)
+
         self.exit_action.setEnabled(True)
         self.updateBtn.clicked.connect(self.update_pressed)
         self.shareX_action.triggered.connect(self.change_sharex)
@@ -128,9 +137,6 @@ class MyWindow(QtWidgets.QMainWindow):
 
         self.progess_bar.setValue(0.0)
 
-        if self.shot_number is not None:
-            self.spinBox.setValue(self.shot_number)
-            self.shot_number_label.setText("Shot Number: {0:d}".format(self.shot_number))
 
         # Take care of fonts here
         self.font.setPointSize(18)
@@ -171,12 +177,17 @@ class MyWindow(QtWidgets.QMainWindow):
                                    'ncol': dlg.ncol,
                                    'server': dlg.server,
                                    'event': dlg.event,
+                                   'tree': dlg.tree,
                                    }
             for i in range(dlg.nrow):
                 for j in range(dlg.ncol):
                     new_config['{0:d}{1:d}'.format(i, j)] = {}
 
             self.config = new_config
+            self.server = dlg.server
+            self.tree = dlg.tree
+            self.event_name = dlg.event
+
             self.enable_actions_after_config()
             self.node_locs = self.get_data_locs()
             self.update_subplot_config(dlg.nrow, dlg.ncol)
@@ -223,7 +234,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
         self.node_locs = locs
 
-        self.fetch_data(self.shot_number)
+        #self.fetch_data(self.shot_number)
 
     def config_parser(self, filename):
         config = ConfigObj(filename)
@@ -231,6 +242,12 @@ class MyWindow(QtWidgets.QMainWindow):
         self.config = config
         nrow = int(self.config['setup']['nrow'])
         ncol = int(self.config['setup']['ncol'])
+
+        try:
+            self.tree = self.config['setup']['tree']
+        except KeyError:
+            self.tree = 'wipal'
+
         self.event_name = self.config['setup']['event']
         self.server = self.config['setup']['server']
         data_locs = self.get_data_locs()
@@ -298,7 +315,8 @@ class MyWindow(QtWidgets.QMainWindow):
         for k in keys:
             for name in node_locs[k]:
                 if name not in ignore_items:
-                    worker = Worker(mdsh.retrieve_signal, shot_number, node_locs[k][name], k, name, self.server)
+                    worker = Worker(mdsh.retrieve_signal, shot_number, node_locs[k][name], k, name,
+                                    self.server, self.tree)
                     worker.signals.result.connect(self.handle_returning_data)
                     self.threadpool.start(worker)
 
@@ -314,11 +332,9 @@ class MyWindow(QtWidgets.QMainWindow):
         self.data[loc].append(data)
 
         if self.completion == self.n_positions:
-            #print("I should plot now")
             self.handle_mdsplus_data(self.data)
 
     def handle_mdsplus_data(self, data):
-        #print('i have the data')
         self.data = data
 
         axs = self.axs
@@ -328,7 +344,6 @@ class MyWindow(QtWidgets.QMainWindow):
         if data is None:
             self.status.setText("Error opening Shot {0:d}".format(self.shot_number))
         else:
-            #print('plotting data now')
             self.down_samplers = data_plotter.plot_all_data(axs, self.node_locs, data,
                                                             downsampling=self.downsampling_points)
 

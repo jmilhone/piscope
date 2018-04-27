@@ -12,6 +12,7 @@ class NewConfigDialog(QtWidgets.QDialog):
         self.ncol = 2
         self.server = '192.168.113.62'
         self.event = 'raw_data_ready'
+        self.tree = 'wipal'
 
         self.row_label = QtWidgets.QLabel(self)
         self.row_input = QtWidgets.QSpinBox(self)
@@ -21,9 +22,11 @@ class NewConfigDialog(QtWidgets.QDialog):
         self.server_input = QtWidgets.QLineEdit(self)
         self.event_label = QtWidgets.QLabel(self)
         self.event_input = QtWidgets.QLineEdit(self)
+        self.tree_label = QtWidgets.QLabel(self)
+        self.tree_input = QtWidgets.QLineEdit(self)
 
-        self.row_input.setRange(0, 9)
-        self.col_input.setRange(0, 9)
+        self.row_input.setRange(2, 9)
+        self.col_input.setRange(2, 9)
 
         self.buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
                                                   QtWidgets.QDialogButtonBox.Cancel)
@@ -33,6 +36,7 @@ class NewConfigDialog(QtWidgets.QDialog):
         self.hbox_row_col = QtWidgets.QHBoxLayout()
         self.hbox_server = QtWidgets.QHBoxLayout()
         self.hbox_event = QtWidgets.QHBoxLayout()
+        self.hbox_tree = QtWidgets.QHBoxLayout()
         self.vbox = QtWidgets.QVBoxLayout()
         self.init_UI(xloc=xloc, yloc=yloc)
 
@@ -40,6 +44,7 @@ class NewConfigDialog(QtWidgets.QDialog):
         self.col_input.valueChanged.connect(self.update_col)
         self.server_input.editingFinished.connect(self.update_server)
         self.event_input.editingFinished.connect(self.update_event)
+        self.tree_input.editingFinished.connect(self.update_tree)
 
     def init_UI(self, xloc=None, yloc=None):
         if xloc is None:
@@ -53,11 +58,13 @@ class NewConfigDialog(QtWidgets.QDialog):
         self.col_label.setText("Number of Columns: ")
         self.server_label.setText("Server Address: ")
         self.event_label.setText("MDSplus Event Name: ")
+        self.tree_label.setText("MDSplus Tree Name: ")
 
         self.row_input.setValue(self.nrow)
         self.col_input.setValue(self.ncol)
         self.server_input.setText(self.server)
         self.event_input.setText(self.event)
+        self.tree_input.setText(self.tree)
 
         self.hbox_row_col.addWidget(self.row_label)
         self.hbox_row_col.addWidget(self.row_input)
@@ -71,8 +78,12 @@ class NewConfigDialog(QtWidgets.QDialog):
         self.hbox_event.addWidget(self.event_label)
         self.hbox_event.addWidget(self.event_input)
 
+        self.hbox_tree.addWidget(self.tree_label)
+        self.hbox_tree.addWidget(self.tree_input)
+
         self.vbox.addLayout(self.hbox_row_col)
         self.vbox.addLayout(self.hbox_server)
+        self.vbox.addLayout(self.hbox_tree)
         self.vbox.addLayout(self.hbox_event)
         self.vbox.addWidget(self.buttons)
         self.setLayout(self.vbox)
@@ -89,5 +100,7 @@ class NewConfigDialog(QtWidgets.QDialog):
     def update_event(self):
         self.event = self.event_input.text()
 
+    def update_tree(self):
+        self.tree = self.tree_input.text()
 
 

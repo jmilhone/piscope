@@ -2,12 +2,14 @@ from __future__ import division, print_function
 import MDSplus as mds
 from .data import Data
 
-def get_current_shot():
+
+def get_current_shot(tree):
     try:
-        current_shot = mds.tree.Tree.getCurrent("wipal")
+        current_shot = mds.tree.Tree.getCurrent(tree)
     except mds.mdsExceptions.TreeNOCURRENT as e:
         return None
     return current_shot
+
 
 def retrieve_signals(shot_number, loc_dict, loc_name, server):
     ignore_items = ['legend', 'xlabel', 'ylabel', 'xlim', 'ylim', 'color']
@@ -26,16 +28,18 @@ def retrieve_signals(shot_number, loc_dict, loc_name, server):
 
     return loc_name, temp_data
 
-def retrieve_signal(shot_number, signal_info, loc_name, signal_name, server):
+
+def retrieve_signal(shot_number, signal_info, loc_name, signal_name, server, tree):
 
     try:
         con = mds.Connection(server)
-        con.openTree("wipal", shot_number)
+        con.openTree(tree, shot_number)
     except mds.MdsIpException as e:
         return None
     data = retrieve_data(con, signal_info, signal_name)
 
     return loc_name, signal_name, data
+
 
 def retrieve_all_data(shot_number, locs, server):
     #try:
