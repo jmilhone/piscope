@@ -326,6 +326,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.progess_bar.setValue(self.completion / self.n_positions * 100.0)
         # unpack data_tuple
         loc, name, data = data_tuple
+
         if self.data[loc] is None:
             # need to initialize the dict
             self.data[loc] = list()
@@ -343,9 +344,12 @@ class MyWindow(QtWidgets.QMainWindow):
                 ax.cla()
         if data is None:
             self.status.setText("Error opening Shot {0:d}".format(self.shot_number))
-        else:
+        elif mdsh.check_data_dictionary(self.data):
             self.down_samplers = data_plotter.plot_all_data(axs, self.node_locs, data,
                                                             downsampling=self.downsampling_points)
+            self.status.setText("Idle")
+        else:
+            self.status.setText("Didn't Find any data in Shot {0:d}".format(self.shot_number))
 
         self.shot_number_label.setText("Shot {0:d}".format(self.shot_number))
         self.spinBox.setValue(self.shot_number)
@@ -354,7 +358,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.toolbar.update()
         self.toolbar.push_current()
         self.canvas.draw()
-        self.status.setText("Idle")
         self.progess_bar.setValue(0.0)
 
     def change_auto_update(self, state):

@@ -23,7 +23,8 @@ def plot(ax, info_dict, data, downsampling=10000):
     xend = -np.inf
 
     for d in data:
-        if len(d.data) > 1:
+        #if len(d.data) > 1:
+        if d.data is not None:
             actual_data += [d]
 
             # prep xstart and xend
@@ -39,7 +40,6 @@ def plot(ax, info_dict, data, downsampling=10000):
         x, y = down_sampler.downsample(d, xstart, xend)
         line, = ax.plot(x, y, label=d.name, color=d.color, lw=1)
         down_sampler.lines.append(line)
-
 
     lg = None
     if 'legend' in info_keys and strtobool(info_dict['legend']):

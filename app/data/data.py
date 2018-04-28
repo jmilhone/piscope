@@ -11,8 +11,6 @@ class Data:
 
     @property
     def time(self):
-        if self._time is None:
-            return np.array([0.0])
         return self._time
 
     @time.setter
@@ -21,8 +19,6 @@ class Data:
 
     @property
     def data(self):
-        if self._data is None:
-            return np.array([0.0])
         return self._data
 
     @data.setter
@@ -30,11 +26,15 @@ class Data:
         self._data = val
 
     def __repr__(self):
+        if self._time is None or self._data is None:
+            return self.name + "has no data " + repr(self._time) + " " + repr(self._data)
+
         return self.name + "\ntime: " + repr(self._time) + " shape:" + str(self.time.shape) + \
-               "\ndata: " + repr(self._data) + " shape:" + str(self.data.shape)
+            "\ndata: " + repr(self._data) + " shape:" + str(self.data.shape)
 
     def __str__(self):
         return self.name
+
 
 if __name__ == "__main__":
     a = np.linspace(0, 1, 11)
