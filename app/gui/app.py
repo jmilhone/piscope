@@ -54,7 +54,7 @@ class MyWindow(QtWidgets.QMainWindow):
                                                        "&Edit Configuration", self)
         self.save_action = QtWidgets.QAction(QtGui.QIcon("Icons/disk-black.png"), "&Save...", self)
         self.save_as_action = QtWidgets.QAction(QtGui.QIcon("Icons/disks-black.png"), "Save As", self)
-        self.exit_action = QtWidgets.QAction("&Quit PiScope", self)
+        self.exit_action = QtWidgets.QAction(QtGui.QIcon("Icons/cross-button.png"), "&Exit PiScope", self)
         self.new_config_action = QtWidgets.QAction(QtGui.QIcon("Icons/application--plus.png"),
                                                    "&New Configuration...", self)
         self.change_downsample = QtWidgets.QAction("Edit Downsampling", self)
