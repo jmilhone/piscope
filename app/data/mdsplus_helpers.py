@@ -20,61 +20,18 @@ def check_data_dictionary(data_dict):
     # If you make it to here, that means all items were None
     return False
 
-# def retrieve_signals(shot_number, loc_dict, loc_name, server):
-#     ignore_items = ['legend', 'xlabel', 'ylabel', 'xlim', 'ylim', 'color']
-#     print("im here")
-#     data = dict()
-#     try:
-#         con = mds.Connection(server)
-#         con.openTree("wipal", shot_number)
-#     except mds.MdsIpException as e:
-#         return None
-
-    # temp_data = list()
-    # for name in loc_dict:
-    #     if name.lower() not in ignore_items:
-    #         temp_data.append(retrieve_data(con, loc_dict[name], name))
-
-    # return loc_name, temp_data
-
 
 def retrieve_signal(shot_number, signal_info, loc_name, signal_name, server, tree):
 
     try:
         con = mds.Connection(server)
         con.openTree(tree, shot_number)
-    except mds.MdsIpException as e:
-        return None, None, None
-    data = retrieve_data(con, signal_info, signal_name)
-
+        data = retrieve_data(con, signal_info, signal_name)
+    except (mds.MdsIpException, mds.TreeFOPENR, mds.TdiMISS_ARG) as e:
+        print("Error with shot {0:d}, loc {1}, name {2}".format(shot_number, loc_name, signal_name))
+        print(e.message)
+        data = None
     return loc_name, signal_name, data
-
-
-# def retrieve_all_data(shot_number, locs, server):
-#     #try:
-#     #    wipal = mds.Tree("wipal", shot_number)
-#     #except mds.TreeFOPENR, e:
-#     #    return None
-#     try:
-#         con = mds.Connection(server)
-#         con.openTree("wipal", shot_number)
-#     except mds.MdsIpException as e:
-#         return None
-
-    # data = {}
-    # for grid_position in locs:
-
-        # temp_data = []
-        # names = locs[grid_position].keys()
-        # names.sort()
-        # for name in names:
-        #     if name.lower() not in ['legend', 'xlabel', 'ylabel', 'xlim', 'ylim', 'color']:
-        #         temp_data.append(retrieve_data(con, locs[grid_position][name], name))
-        #         #temp_data.append(retrieve_data(wipal, locs[grid_position][name], name))
-
-        # data[grid_position] = temp_data
-
-    # return data
 
 
 def retrieve_data(connection, node_loc, name):

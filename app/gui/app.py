@@ -306,11 +306,10 @@ class MyWindow(QtWidgets.QMainWindow):
         self.n_positions = 0
         # First loop through and count the number of signals
         for k in keys:
-            self.data[k] = None
+            self.data[k] = list()
             for name in node_locs[k]:
                 if name not in ignore_items:
                     self.n_positions += 1
-
         # Now reloop over and start the workers
         for k in keys:
             for name in node_locs[k]:
@@ -326,10 +325,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.progess_bar.setValue(self.completion / self.n_positions * 100.0)
         # unpack data_tuple
         loc, name, data = data_tuple
-
-        if self.data[loc] is None:
-            # need to initialize the dict
-            self.data[loc] = list()
         self.data[loc].append(data)
 
         if self.completion == self.n_positions:

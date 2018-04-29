@@ -24,7 +24,7 @@ def plot(ax, info_dict, data, downsampling=10000):
 
     for d in data:
         #if len(d.data) > 1:
-        if d.data is not None:
+        if d is not None:
             actual_data += [d]
 
             # prep xstart and xend
