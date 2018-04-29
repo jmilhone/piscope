@@ -11,6 +11,7 @@ from .events import MyEvent
 from .edit_configuration import EditConfigDialog
 from .new_configuration import NewConfigDialog
 from .downsample_dialog import EditDownsampleDialog
+from .edit_global import EditGlobalDialog
 
 default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
                   '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
@@ -44,20 +45,23 @@ class MyWindow(QtWidgets.QMainWindow):
         # Menu Bar stuff
         self.menu = self.menuBar()
         self.file_menu = self.menu.addMenu("&File")
+        self.edit_menu = self.menu.addMenu("&Edit")
+        self.option_menu = self.menu.addMenu("&Options")
         self.open_config_action = QtWidgets.QAction(QtGui.QIcon("Icons/blue-folder-horizontal-open.png"),
                                                     "&Open Configuration...", self)
         self.open_config_action.triggered.connect(self.onOpenClick)
-        self.option_menu = self.menu.addMenu("&Options")
         self.shareX_action = QtWidgets.QAction("&Share X-axis", self)
         self.autoUpdate_action = QtWidgets.QAction("&Auto Update", self)
         self.openPanelConfigAction = QtWidgets.QAction(QtGui.QIcon("Icons/application--pencil"),
-                                                       "&Edit Configuration", self)
+                                                       "&Edit Configuration...", self)
         self.save_action = QtWidgets.QAction(QtGui.QIcon("Icons/disk-black.png"), "&Save...", self)
         self.save_as_action = QtWidgets.QAction(QtGui.QIcon("Icons/disks-black.png"), "Save As", self)
         self.exit_action = QtWidgets.QAction(QtGui.QIcon("Icons/cross-button.png"), "&Exit PiScope", self)
         self.new_config_action = QtWidgets.QAction(QtGui.QIcon("Icons/application--plus.png"),
                                                    "&New Configuration...", self)
         self.change_downsample = QtWidgets.QAction("Edit Downsampling", self)
+        self.edit_global_action = QtWidgets.QAction(QtGui.QIcon("Icons/gear--pencil.png"),
+                                                    "Edit Global Settings...", self)
 
         self.centralWidget = QtWidgets.QWidget()
         self.spinBox = QtWidgets.QSpinBox(self)
@@ -114,21 +118,26 @@ class MyWindow(QtWidgets.QMainWindow):
         self.change_downsample.triggered.connect(self.open_change_downsample)
         self.autoUpdate_action.triggered.connect(self.change_auto_update)
         self.exit_action.triggered.connect(self.close)
+        self.edit_global_action.triggered.connect(self.edit_global_settings)
         self.show()
 
     def init_UI(self):
         # Add all of the file actions to the file menu
         self.file_menu.addAction(self.new_config_action)
         self.file_menu.addAction(self.open_config_action)
-        self.file_menu.addAction(self.openPanelConfigAction)
+        # self.file_menu.addAction(self.openPanelConfigAction)
         self.file_menu.addAction(self.save_action)
         self.file_menu.addAction(self.save_as_action)
         self.file_menu.addAction(self.exit_action)
+
+        self.edit_menu.addAction(self.edit_global_action)
+        self.edit_menu.addAction(self.openPanelConfigAction)
 
         # Add all of the option actions to the action menu
         self.option_menu.addAction(self.autoUpdate_action)
         self.option_menu.addAction(self.shareX_action)
         self.option_menu.addAction(self.change_downsample)
+
 
         self.autoUpdate_action.setCheckable(True)
         self.shareX_action.setCheckable(True)
@@ -200,6 +209,15 @@ class MyWindow(QtWidgets.QMainWindow):
             self.config = dlg.config
             self.node_locs = self.get_data_locs()
             self.fetch_data(self.shot_number)
+
+    def edit_global_settings(self):
+        xloc, yloc = self.new_dialog_positions()
+        dlg = EditGlobalDialog(self.config, xloc=xloc, yloc=yloc)
+        if dlg.exec_():
+            self.server = dlg.server
+            self.tree = dlg.tree
+            self.config['setup']['server'] = self.server
+            self.config['setup']['tree'] = self.tree
 
     def new_dialog_positions(self):
         rect = self.geometry()
@@ -405,7 +423,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def _save_configuration(self, filename):
         self.config_filename = filename
-        config_obj = ConfigObj()
+        config_obj = ConfigObj(indent_type="    ")
         config_obj.filename = self.config_filename
         config_obj.update(self.config)
         config_obj.write()
