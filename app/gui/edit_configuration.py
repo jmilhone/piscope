@@ -17,11 +17,11 @@ class EditConfigDialog(QtWidgets.QDialog):
 
         grid = config.keys()
         grid = [x for x in grid if x != 'setup']
-        grid.sort()
         self.grid = grid
-
+        self.grid_labels = ["Column {1}, Row {0}".format(x[0], x[1]) for x in self.grid]
+        self.grid_labels, self.grid = zip(*sorted(zip(self.grid_labels, self.grid)))
         self.combo = QtWidgets.QComboBox(self)
-        for pos in grid:
+        for pos in self.grid_labels:
             self.combo.addItem(pos)
         self.combo_label = QtWidgets.QLabel(self)
 
@@ -225,6 +225,9 @@ class EditConfigDialog(QtWidgets.QDialog):
     def populate_signal_fields(self, idx):
         if idx != 0:
             pos = self.combo.currentText()
+            print(pos)
+            pos = self.grid[self.combo.currentIndex()]
+            print(pos)
             item = self.item_list.currentItem()
             if item is None:  # Seems to trigger this function when switching grid positions, need to figure that out
                 return
@@ -262,6 +265,9 @@ class EditConfigDialog(QtWidgets.QDialog):
         label = self.label.text()
 
         pos = self.combo.currentText()
+        print(pos)
+        pos = self.grid[self.combo.currentIndex()]
+        print(pos)
         item = self.item_list.currentItem()
         color = self.color_input.text()
 
@@ -269,7 +275,7 @@ class EditConfigDialog(QtWidgets.QDialog):
             if idx != 0:
                 current_label = item.text()
                 del self.config[pos][current_label]
-            self.config[pos][label] = {}
+            self.config[pos][label] = dict()
             self.config[pos][label]['x'] = xtext
             self.config[pos][label]['y'] = ytext
             self.config[pos][label]['color'] = color

@@ -8,7 +8,7 @@ def plot_all_data(axs, locs, data, downsampling=10000):
     down_samplers = []
     for idx, pos in enumerate(locs):
         i, j = (int(x) for x in pos)
-        down_samplers += [plot(axs[i][j], locs[pos], data[pos], downsampling=downsampling)]
+        down_samplers += [plot(axs[j][i], locs[pos], data[pos], downsampling=downsampling)]
 
     return down_samplers
 

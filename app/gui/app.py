@@ -12,6 +12,8 @@ from .edit_configuration import EditConfigDialog
 from .new_configuration import NewConfigDialog
 from .downsample_dialog import EditDownsampleDialog
 from .edit_global import EditGlobalDialog
+from .helpers import global_lcm
+
 
 default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
                   '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
@@ -246,9 +248,11 @@ class MyWindow(QtWidgets.QMainWindow):
         self.save_as_action.setEnabled(True)
 
     def load_configuration(self, filename):
-        nrow, ncol, locs = self.config_parser(filename)
+        # nrow, ncol, locs = self.config_parser(filename)
+        col_setup, locs = self.config_parser(filename)
         self.enable_actions_after_config()
-        self.update_subplot_config(nrow, ncol)
+        # self.update_subplot_config(nrow, ncol)
+        self.update_subplot_config(col_setup)
 
         self.node_locs = locs
 
@@ -258,19 +262,28 @@ class MyWindow(QtWidgets.QMainWindow):
         config = ConfigObj(filename)
         config = config.dict()
         self.config = config
-        nrow = int(self.config['setup']['nrow'])
-        ncol = int(self.config['setup']['ncol'])
+        # nrow = int(self.config['setup']['nrow'])
+        # ncol = int(self.config['setup']['ncol'])
 
+        col_setup = self.config['setup']['col']
+        col_setup = [int(x) for x in col_setup]
+
+        # determine grid keys
+        for col, nrow in enumerate(col_setup):
+            for row in range(nrow):
+                new_key = "{0:d}{1:d}".format(row, col)
+                if new_key not in self.config:
+                    self.config[new_key] = dict()
         try:
             self.tree = self.config['setup']['tree']
         except KeyError:
+            self.config['setup']['tree'] = 'wipal'
             self.tree = 'wipal'
 
         self.event_name = self.config['setup']['event']
         self.server = self.config['setup']['server']
         data_locs = self.get_data_locs()
-
-        return nrow, ncol, data_locs
+        return col_setup, data_locs
 
     def get_data_locs(self):
         data_locs = {}
@@ -294,7 +307,8 @@ class MyWindow(QtWidgets.QMainWindow):
                     self.config[key][k]['color'] = default_colors[j % 10]
                     j += 1
 
-    def update_subplot_config(self, nrow, ncol):
+    # def update_subplot_config(self, nrow, ncol):
+    def update_subplot_config(self, col_setup):
         if self.figure is not None:
             self.vbox.removeWidget(self.toolbar)
             self.vbox.removeWidget(self.canvas)
@@ -302,7 +316,21 @@ class MyWindow(QtWidgets.QMainWindow):
         self.vbox.removeItem(self.hbox)
         self.vbox.removeItem(self.shot_hbox)
 
-        self.figure, self.axs = plt.subplots(nrow, ncol)
+        #self.figure, self.axs = plt.subplots(nrow, ncol)
+        self.figure = plt.figure(0)
+        self.axs = []
+        cols = [x for x in col_setup if x > 0]
+        lcm = global_lcm(cols)
+        ncols = len(cols)
+        for idx, item in enumerate(cols):
+            factor = lcm // item
+            print(factor)
+            axs = []
+            for j in range(item):
+                ax = plt.subplot2grid((lcm, ncols), (factor*j, idx), rowspan=factor)
+                axs.append(ax)
+            self.axs.append(axs)
+
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
 
