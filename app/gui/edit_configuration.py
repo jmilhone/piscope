@@ -225,9 +225,7 @@ class EditConfigDialog(QtWidgets.QDialog):
     def populate_signal_fields(self, idx):
         if idx != 0:
             pos = self.combo.currentText()
-            print(pos)
             pos = self.grid[self.combo.currentIndex()]
-            print(pos)
             item = self.item_list.currentItem()
             if item is None:  # Seems to trigger this function when switching grid positions, need to figure that out
                 return
@@ -265,9 +263,7 @@ class EditConfigDialog(QtWidgets.QDialog):
         label = self.label.text()
 
         pos = self.combo.currentText()
-        print(pos)
         pos = self.grid[self.combo.currentIndex()]
-        print(pos)
         item = self.item_list.currentItem()
         color = self.color_input.text()
 
@@ -281,9 +277,7 @@ class EditConfigDialog(QtWidgets.QDialog):
             self.config[pos][label]['color'] = color
         else:
             if idx != 0:
-                print("I should delete")
                 current_label = item.text()
-                print(current_label)
                 del self.config[pos][current_label]
 
         xlabel = self.xlabel.text()

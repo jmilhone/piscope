@@ -51,7 +51,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.option_menu = self.menu.addMenu("&Options")
         self.open_config_action = QtWidgets.QAction(QtGui.QIcon("Icons/blue-folder-horizontal-open.png"),
                                                     "&Open Configuration...", self)
-        self.open_config_action.triggered.connect(self.onOpenClick)
         self.shareX_action = QtWidgets.QAction("&Share X-axis", self)
         self.autoUpdate_action = QtWidgets.QAction("&Auto Update", self)
         self.openPanelConfigAction = QtWidgets.QAction(QtGui.QIcon("Icons/application--pencil"),
@@ -121,6 +120,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.autoUpdate_action.triggered.connect(self.change_auto_update)
         self.exit_action.triggered.connect(self.close)
         self.edit_global_action.triggered.connect(self.edit_global_settings)
+        self.open_config_action.triggered.connect(self.onOpenClick)
         self.show()
 
     def init_UI(self):
@@ -184,16 +184,13 @@ class MyWindow(QtWidgets.QMainWindow):
         if dlg.exec_():
             self.config_filename = None
             new_config = dict()
-            new_config['setup'] = {'nrow': dlg.nrow,
-                                   'ncol': dlg.ncol,
+            new_config['setup'] = {'col': dlg.column_setup,
                                    'server': dlg.server,
                                    'event': dlg.event,
                                    'tree': dlg.tree,
                                    }
-            for i in range(dlg.nrow):
-                for j in range(dlg.ncol):
-                    new_config['{0:d}{1:d}'.format(i, j)] = {}
 
+            self.add_grid_keys(new_config, dlg.column_setup)
             self.config = new_config
             self.server = dlg.server
             self.tree = dlg.tree
@@ -201,7 +198,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
             self.enable_actions_after_config()
             self.node_locs = self.get_data_locs()
-            self.update_subplot_config(dlg.nrow, dlg.ncol)
+            self.update_subplot_config(dlg.column_setup)
             self.fetch_data(self.shot_number)
 
     def edit_configuration(self):
@@ -236,8 +233,19 @@ class MyWindow(QtWidgets.QMainWindow):
 
         if dlg.exec_():
             filenames = dlg.selectedFiles()
+            # Disable the old MDSplus event if it is running
+            update_state = self.autoUpdate_action.isChecked()
+            self.autoUpdate_action.setChecked(False)
+            self.change_auto_update(None)
+
             self.config_filename = filenames[0]
             self.load_configuration(filenames[0])
+            self.data = None
+            self.change_sharex()
+
+            # Start up the new MDSplus event if it needs to be
+            self.autoUpdate_action.setChecked(update_state)
+            self.change_auto_update(update_state)
 
     def enable_actions_after_config(self):
         self.updateBtn.setEnabled(True)
@@ -248,32 +256,23 @@ class MyWindow(QtWidgets.QMainWindow):
         self.save_as_action.setEnabled(True)
 
     def load_configuration(self, filename):
-        # nrow, ncol, locs = self.config_parser(filename)
         col_setup, locs = self.config_parser(filename)
         self.enable_actions_after_config()
-        # self.update_subplot_config(nrow, ncol)
         self.update_subplot_config(col_setup)
 
         self.node_locs = locs
-
-        #self.fetch_data(self.shot_number)
 
     def config_parser(self, filename):
         config = ConfigObj(filename)
         config = config.dict()
         self.config = config
-        # nrow = int(self.config['setup']['nrow'])
-        # ncol = int(self.config['setup']['ncol'])
 
         col_setup = self.config['setup']['col']
         col_setup = [int(x) for x in col_setup]
 
         # determine grid keys
-        for col, nrow in enumerate(col_setup):
-            for row in range(nrow):
-                new_key = "{0:d}{1:d}".format(row, col)
-                if new_key not in self.config:
-                    self.config[new_key] = dict()
+        self.add_grid_keys(self.config, col_setup)
+
         try:
             self.tree = self.config['setup']['tree']
         except KeyError:
@@ -284,6 +283,13 @@ class MyWindow(QtWidgets.QMainWindow):
         self.server = self.config['setup']['server']
         data_locs = self.get_data_locs()
         return col_setup, data_locs
+
+    def add_grid_keys(self, config, column_setup):
+        for col, nrow in enumerate(column_setup):
+            for row in range(nrow):
+                new_key = "{0:d}{1:d}".format(row, col)
+                if new_key not in self.config:
+                    config[new_key] = dict()
 
     def get_data_locs(self):
         data_locs = {}
@@ -324,7 +330,6 @@ class MyWindow(QtWidgets.QMainWindow):
         ncols = len(cols)
         for idx, item in enumerate(cols):
             factor = lcm // item
-            print(factor)
             axs = []
             for j in range(item):
                 ax = plt.subplot2grid((lcm, ncols), (factor*j, idx), rowspan=factor)

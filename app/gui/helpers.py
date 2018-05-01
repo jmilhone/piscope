@@ -20,7 +20,7 @@ def find_lcm(num1, num2):
 
 def global_lcm(numbers):
     if len(numbers) < 2:
-        return None
+        return numbers[0]
     elif len(numbers) == 2:
         return find_lcm(numbers[0], numbers[1])
     else:
@@ -31,7 +31,6 @@ def global_lcm(numbers):
         for i in range(2, len(numbers)):
             lcm = find_lcm(lcm, numbers[i])
 
-        print(lcm)
         return lcm
 
 
