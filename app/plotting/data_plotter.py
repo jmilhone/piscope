@@ -21,7 +21,6 @@ def plot(ax, info_dict, data, downsampling=10000):
     actual_data = []
     xstart = np.inf
     xend = -np.inf
-
     for d in data:
         #if len(d.data) > 1:
         if d is not None:
@@ -36,10 +35,21 @@ def plot(ax, info_dict, data, downsampling=10000):
     # Only include signals with data, no empty arrays
     down_sampler = DataDisplayDownsampler(actual_data, xend - xstart, ax, max_points=downsampling)
 
+    try:
+        noresample = info_dict['noresample']
+    except KeyError:
+        noresample = False
+
     for d in actual_data:
-        x, y = down_sampler.downsample(d, xstart, xend)
-        line, = ax.plot(x, y, label=d.name, color=d.color, lw=1)
-        down_sampler.lines.append(line)
+
+        if not noresample:
+            x, y = down_sampler.downsample(d, xstart, xend)
+            line, = ax.plot(x, y, label=d.name, color=d.color, lw=1)
+            down_sampler.lines.append(line)
+        else:
+            print(d.name, "not resampling!")
+            x, y = d.time, d.data
+            line, = ax.plot(x, y, label=d.name, color=d.color, lw=1)
 
     lg = None
     if 'legend' in info_keys and strtobool(info_dict['legend']):

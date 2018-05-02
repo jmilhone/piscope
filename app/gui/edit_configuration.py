@@ -44,6 +44,8 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.ylabel = QtWidgets.QLineEdit(self)
         self.label = QtWidgets.QLineEdit(self)
         self.legend = QtWidgets.QCheckBox(self)
+        self.no_resample = QtWidgets.QCheckBox(self)
+        self.xshareable = QtWidgets.QCheckBox(self)
         self.xlab = QtWidgets.QLabel(self)
         self.ylab = QtWidgets.QLabel(self)
         self.lab = QtWidgets.QLabel(self)
@@ -86,6 +88,8 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.y_qlabel.setText("Y: ")
 
         self.legend.setText("Legend")
+        self.no_resample.setText("No Resample")
+        self.xshareable.setText("X shareable")
         self.xlab.setText("X Label: ")
         self.ylab.setText("Y Label: ")
         self.lab.setText("Signal Name")
@@ -130,6 +134,8 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.options_box.addWidget(self.ylab)
         self.options_box.addWidget(self.ylabel)
         self.options_box.addWidget(self.legend)
+        self.options_box.addWidget(self.no_resample)
+        self.options_box.addWidget(self.xshareable)
 
         self.lab_box.addWidget(self.lab)
         self.lab_box.addWidget(self.label)
@@ -186,6 +192,21 @@ class EditConfigDialog(QtWidgets.QDialog):
         else:
             self.legend.setChecked(False)
 
+        if "noresample" in keys and strtobool(local_config['noresample']):
+            self.no_resample.setChecked(True)
+        else:
+            self.no_resample.setChecked(False)
+
+        # try:
+        #     print(local_config['xshare'])
+        # except KeyError:
+        #     print('xshare not in {}'.format(pos))
+
+        if "xshare" in keys and not strtobool(local_config['xshare']):
+            self.xshareable.setChecked(False)
+        else:
+            self.xshareable.setChecked(True)
+
         if "xlim" in keys:
             self.xlim_check.setChecked(True)
             self.xlim_low.setEnabled(True)
@@ -213,7 +234,7 @@ class EditConfigDialog(QtWidgets.QDialog):
             self.ylim_high.setEnabled(False)
 
     def populate_list_box(self, key):
-        ignore_items = ['xlabel', 'ylabel', 'legend', 'xlim', 'ylim', 'color']
+        ignore_items = ['xlabel', 'ylabel', 'legend', 'xlim', 'ylim', 'color', 'noresample', 'xshare']
         pos_items = [x for x in self.config[key] if x not in ignore_items]
         pos_items.sort()
 
@@ -296,6 +317,12 @@ class EditConfigDialog(QtWidgets.QDialog):
             ylow = self.ylim_low.value()
             yhigh = self.ylim_high.value()
             self.config[pos]['ylim'] = [str(ylow), str(yhigh)]
+
+        if self.no_resample.isChecked():
+            self.config[pos]['noresample'] = str(True)
+
+        if not self.xshareable.isChecked():
+            self.config[pos]['xshare'] = str(False)
 
         self.item_list.clear()
         self.populate_list_box(pos)

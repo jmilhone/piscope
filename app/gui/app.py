@@ -13,7 +13,7 @@ from .new_configuration import NewConfigDialog
 from .downsample_dialog import EditDownsampleDialog
 from .edit_global import EditGlobalDialog
 from .helpers import global_lcm
-
+from distutils.util import strtobool
 
 default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
                   '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
@@ -84,7 +84,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.canvas = None
         self.toolbar = None
         self.axs = None
-
+        self.shared_axs = None
         self.setGeometry(100, 100, 1200, 1200)
 
         if config_file is not None:
@@ -207,6 +207,15 @@ class MyWindow(QtWidgets.QMainWindow):
         if dlg.exec_():
             self.config = dlg.config
             self.node_locs = self.get_data_locs()
+            sharex = self.shareX_action.isChecked()
+            if sharex:
+                self.shareX_action.setChecked(False)
+                self.change_sharex()
+                self.modify_shared_axes_list()
+                self.shareX_action.setChecked(True)
+                self.change_sharex()
+            else:
+                self.modify_shared_axes_list()
             self.fetch_data(self.shot_number)
 
     def edit_global_settings(self):
@@ -259,8 +268,8 @@ class MyWindow(QtWidgets.QMainWindow):
         col_setup, locs = self.config_parser(filename)
         self.enable_actions_after_config()
         self.update_subplot_config(col_setup)
-
         self.node_locs = locs
+        self.modify_shared_axes_list()
 
     def config_parser(self, filename):
         config = ConfigObj(filename)
@@ -303,7 +312,7 @@ class MyWindow(QtWidgets.QMainWindow):
         local_config = self.config[key]
         keys = [x for x in local_config.keys()]
         keys.sort()
-        top_ignore = ['xlabel', 'ylabel', 'xlim', 'ylim', 'legend']
+        top_ignore = ['xlabel', 'ylabel', 'xlim', 'ylim', 'legend', 'noresample', 'xshare']
         j = 0
         for k in keys:
             if k not in top_ignore:
@@ -351,7 +360,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
         node_locs = self.node_locs
         keys = node_locs.keys()
-        ignore_items = ['legend', 'xlabel', 'ylabel', 'xlim', 'ylim', 'color']
+        ignore_items = ['legend', 'xlabel', 'ylabel', 'xlim', 'ylim', 'color', 'noresample', 'xshare']
         self.data = dict()
         self.completion = 0
         self.n_positions = 0
@@ -419,18 +428,32 @@ class MyWindow(QtWidgets.QMainWindow):
                     self.mds_update_event = None
 
     def change_sharex(self):
-        axs = self.axs
-        ax0 = axs[0][0]
+        axs = self.shared_axs
+
+        if axs is None or len(axs) == 1:
+            # Nothing to do here
+            return
+
+        ax0 = axs[0]
         if self.shareX_action.isChecked():
-            for ax in axs:
-                for a in ax:
-                    if a != axs[0][0]:
-                        a.get_shared_x_axes().join(a, ax0)
+            for ax in axs[1:]:
+                ax0.get_shared_x_axes().join(ax, ax0)
         else:
-            for ax in axs:
-                for a in ax:
-                    if a != axs[0][0]:
-                        ax0.get_shared_x_axes().remove(a)
+            for ax in axs[1:]:
+                ax0.get_shared_x_axes().remove(ax)
+
+        # axs = self.axs
+        # ax0 = axs[0][0]
+        # if self.shareX_action.isChecked():
+        #     for ax in axs:
+        #         for a in ax:
+        #             if a != axs[0][0]:
+        #                 a.get_shared_x_axes().join(a, ax0)
+        # else:
+        #     for ax in axs:
+        #         for a in ax:
+        #             if a != axs[0][0]:
+        #                 ax0.get_shared_x_axes().remove(a)
 
     def update_pressed(self):
         shot_number = self.spinBox.value()
@@ -472,3 +495,11 @@ class MyWindow(QtWidgets.QMainWindow):
             else:
                 self.fetch_data(self.shot_number)
 
+    def modify_shared_axes_list(self):
+        self.shared_axs = []
+        for pos in self.node_locs:
+            if 'xshare' in self.node_locs[pos] and not strtobool(self.node_locs[pos]['xshare']):
+                pass
+            else:
+                i, j = (int(x) for x in pos)
+                self.shared_axs.append(self.axs[j][i])
