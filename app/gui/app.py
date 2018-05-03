@@ -419,6 +419,7 @@ class MyWindow(QtWidgets.QMainWindow):
             self.status.setText("Idle")
         else:
             self.status.setText("Didn't Find any data in Shot {0:d}".format(self.shot_number))
+            self.data = None
 
         self.shot_number_label.setText("Shot {0:d}".format(self.shot_number))
         self.spinBox.setValue(self.shot_number)
