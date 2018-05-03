@@ -21,6 +21,16 @@ def check_data_dictionary(data_dict):
     return False
 
 
+def check_open_tree(shot_number, server, tree):
+    try:
+        con = mds.Connection(server)
+        con.openTree(tree, shot_number)
+        return True
+    except (mds.MdsIpException, mds.TreeFOPENR, mds.TdiMISS_ARG) as e:
+        # print("Error with shot {0:d}".format(shot_number))
+        # print(e.message)
+        return False
+
 def retrieve_signal(shot_number, signal_info, loc_name, signal_name, server, tree):
 
     try:

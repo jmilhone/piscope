@@ -109,6 +109,9 @@ class MyWindow(QtWidgets.QMainWindow):
             self.save_action.setDisabled(True)
             self.save_as_action.setDisabled(True)
 
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.check_alive)
+        self.timer.setInterval(5.0 * 1000)
         self.exit_action.setEnabled(True)
         self.updateBtn.clicked.connect(self.update_pressed)
         self.shareX_action.triggered.connect(self.change_sharex)
@@ -122,6 +125,9 @@ class MyWindow(QtWidgets.QMainWindow):
         self.edit_global_action.triggered.connect(self.edit_global_settings)
         self.open_config_action.triggered.connect(self.onOpenClick)
         self.show()
+
+    def check_alive(self):
+        print("MDSplus event watcher, alive or dead?: ", self.mds_update_event.isAlive())
 
     def init_UI(self):
         # Add all of the file actions to the file menu
@@ -370,6 +376,14 @@ class MyWindow(QtWidgets.QMainWindow):
             for name in node_locs[k]:
                 if name not in ignore_items:
                     self.n_positions += 1
+
+        tree_available = mdsh.check_open_tree(shot_number, self.server, self.tree)
+        print("is the tree available?", tree_available)
+        if not tree_available:
+            print('passing None to hanld mdsplus data')
+            self.handle_mdsplus_data(None)
+            return
+
         # Now reloop over and start the workers
         for k in keys:
             for name in node_locs[k]:
@@ -422,8 +436,10 @@ class MyWindow(QtWidgets.QMainWindow):
                 if self.mds_update_event is None:
                     self.mds_update_event = MyEvent(self.event_name)
                     self.mds_update_event.sender.emitter.connect(self.fetch_data)
+                    self.timer.start()
             else:
                 if self.mds_update_event is not None and self.mds_update_event.isAlive():
+                    self.timer.stop()
                     self.mds_update_event.cancel()
                     self.mds_update_event = None
 

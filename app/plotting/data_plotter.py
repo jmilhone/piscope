@@ -5,6 +5,7 @@ import numpy as np
 
 
 def plot_all_data(axs, locs, data, downsampling=10000):
+    print('entered plot all data')
     down_samplers = []
     for idx, pos in enumerate(locs):
         i, j = (int(x) for x in pos)
