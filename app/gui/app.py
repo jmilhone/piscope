@@ -14,10 +14,14 @@ from .downsample_dialog import EditDownsampleDialog
 from .edit_global import EditGlobalDialog
 from .helpers import global_lcm
 from distutils.util import strtobool
+import logging
+import MDSplus as mds
 
 default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
                   '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
                   '#bcbd22', '#17becf']
+
+logger = logging.getLogger('pi-scope-logger')
 
 
 class MyWindow(QtWidgets.QMainWindow):
@@ -376,15 +380,16 @@ class MyWindow(QtWidgets.QMainWindow):
             for name in node_locs[k]:
                 if name not in ignore_items:
                     self.n_positions += 1
-
+        logger.debug("Asking if tree is available to be opened")
         tree_available = mdsh.check_open_tree(shot_number, self.server, self.tree)
         print("is the tree available?", tree_available)
         if not tree_available:
             print('passing None to hanld mdsplus data')
             self.handle_mdsplus_data(None)
+            logger.warn("tree was unable to be opened. shot = %d" % shot_number)
             return
-
         # Now reloop over and start the workers
+        logger.debug("Asking for data")
         for k in keys:
             for name in node_locs[k]:
                 if name not in ignore_items:
@@ -400,7 +405,7 @@ class MyWindow(QtWidgets.QMainWindow):
         # unpack data_tuple
         loc, name, data = data_tuple
         self.data[loc].append(data)
-
+        logger.debug("Retrieving data for %s" % name)
         if self.completion == self.n_positions:
             self.handle_mdsplus_data(self.data)
 
@@ -413,13 +418,16 @@ class MyWindow(QtWidgets.QMainWindow):
                 ax.cla()
         if data is None:
             self.status.setText("Error opening Shot {0:d}".format(self.shot_number))
+            logger.warn("No data for %d" % self.shot_number)
         elif mdsh.check_data_dictionary(self.data):
             self.down_samplers = data_plotter.plot_all_data(axs, self.node_locs, data,
                                                             downsampling=self.downsampling_points)
             self.status.setText("Idle")
+            logger.debug("There is data for %d, now plotting" % self.shot_number)
         else:
             self.status.setText("Didn't Find any data in Shot {0:d}".format(self.shot_number))
             self.data = None
+            self.debug("No data was found for %d" % self.shot_number)
 
         self.shot_number_label.setText("Shot {0:d}".format(self.shot_number))
         self.spinBox.setValue(self.shot_number)
@@ -435,14 +443,20 @@ class MyWindow(QtWidgets.QMainWindow):
             # if state == QtCore.Qt.Checked:
             if self.autoUpdate_action.isChecked():
                 if self.mds_update_event is None:
+                    logger.debug("Auto update is now on")
                     self.mds_update_event = MyEvent(self.event_name)
                     self.mds_update_event.sender.emitter.connect(self.fetch_data)
                     self.timer.start()
             else:
                 if self.mds_update_event is not None and self.mds_update_event.isAlive():
                     self.timer.stop()
-                    self.mds_update_event.cancel()
+                    try:
+                        self.mds_update_event.cancel()
+                    except mds.mdsExceptions.SsSUCCESS as e:
+                        print(e)
+                        logger.error("STUPID MDSPLUS CANCEL ERROR, %s" % e.message)
                     self.mds_update_event = None
+                    logger.debug("Auto update is now off.")
 
     def change_sharex(self):
         axs = self.shared_axs

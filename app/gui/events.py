@@ -1,14 +1,15 @@
 from __future__ import print_function, division
 #import readline
-from MDSplus import Event
+from MDSplus.event import Event
 from PyQt5 import QtCore
+
 
 class SenderObject(QtCore.QObject):
     emitter = QtCore.pyqtSignal(int)
 
 class MyEvent(Event):
-    def __init__(self, event):
-        super(MyEvent, self).__init__(event)
+    def __init__(self, Event):
+        super(MyEvent, self).__init__(Event)
         self.sender = SenderObject()
 
     def run(self):
