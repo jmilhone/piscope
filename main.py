@@ -9,12 +9,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run a PiScope for the Big Red Ball.")
     parser.add_argument("--config", "-c", type=str, default=None, help="Config File to Load.")
     parser.add_argument("--shot_number", "-s", type=int, default=None, help="Shot Number to Open at Start Up")
+    parser.add_argument("--logging", "-L", type=str, default=None,
+                        help="Log file name for debug logging")
     args = parser.parse_args()
 
-    use_logging = True
     logger = logging.getLogger('pi-scope-logger')
-    if use_logging:
-        handler = logging.FileHandler(filename='test_log.log', mode='w')
+    if args.logging:
+        handler = logging.FileHandler(filename=args.logging, mode='w')
         logger.setLevel(logging.DEBUG)
 
         # create formatter
@@ -23,8 +24,10 @@ if __name__ == "__main__":
         # add formatter to ch
         handler.setFormatter(formatter)
 
-        # add ch to logger
-        logger.addHandler(handler)
+    else:
+        handler = logging.NullHandler()
+
+    logger.addHandler(handler)
     logger.debug("*****************************************")
     logger.debug("Starting up")
 

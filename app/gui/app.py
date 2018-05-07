@@ -91,6 +91,8 @@ class MyWindow(QtWidgets.QMainWindow):
         self.shared_axs = None
         self.setGeometry(100, 100, 1200, 1200)
 
+        self.acquiring_data = False
+
         if config_file is not None:
             self.load_configuration(config_file)
 
@@ -115,7 +117,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.check_alive)
-        self.timer.setInterval(5.0 * 1000)
+        self.timer.setInterval(10.0 * 1000)
         self.exit_action.setEnabled(True)
         self.updateBtn.clicked.connect(self.update_pressed)
         self.shareX_action.triggered.connect(self.change_sharex)
@@ -131,7 +133,8 @@ class MyWindow(QtWidgets.QMainWindow):
         self.show()
 
     def check_alive(self):
-        print("MDSplus event watcher, alive or dead?: ", self.mds_update_event.isAlive())
+        logger.debug("event watcher alive? % s" % str(self.mds_update_event.isAlive()))
+        # print("MDSplus event watcher, alive or dead?: ", self.mds_update_event.isAlive())
 
     def init_UI(self):
         # Add all of the file actions to the file menu
@@ -365,6 +368,12 @@ class MyWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(int)
     def fetch_data(self, shot_number):
+        if self.acquiring_data:
+            # already grabbing data, do nothing
+            logger.debug("User tried to grab more data when already acquiring.  Ignoring User request.")
+            return
+
+        self.acquiring_data = True
         self.status.setText("Retrieving Data from Shot {0:d}".format(shot_number))
         self.shot_number = shot_number
 
@@ -386,6 +395,7 @@ class MyWindow(QtWidgets.QMainWindow):
         if not tree_available:
             print('passing None to hanld mdsplus data')
             self.handle_mdsplus_data(None)
+            self.acquiring_data = False
             logger.warn("tree was unable to be opened. shot = %d" % shot_number)
             return
         # Now reloop over and start the workers
@@ -407,6 +417,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.data[loc].append(data)
         logger.debug("Retrieving data for %s" % name)
         if self.completion == self.n_positions:
+            self.acquiring_data = False
             self.handle_mdsplus_data(self.data)
 
     def handle_mdsplus_data(self, data):
@@ -427,7 +438,7 @@ class MyWindow(QtWidgets.QMainWindow):
         else:
             self.status.setText("Didn't Find any data in Shot {0:d}".format(self.shot_number))
             self.data = None
-            self.debug("No data was found for %d" % self.shot_number)
+            logger.debug("No data was found for %d" % self.shot_number)
 
         self.shot_number_label.setText("Shot {0:d}".format(self.shot_number))
         self.spinBox.setValue(self.shot_number)
@@ -445,7 +456,7 @@ class MyWindow(QtWidgets.QMainWindow):
                 if self.mds_update_event is None:
                     logger.debug("Auto update is now on")
                     self.mds_update_event = MyEvent(self.event_name)
-                    self.mds_update_event.sender.emitter.connect(self.fetch_data)
+                    self.mds_update_event.sender.emitter.connect(self.handle_incoming_mds_event)
                     self.timer.start()
             else:
                 if self.mds_update_event is not None and self.mds_update_event.isAlive():
@@ -472,19 +483,6 @@ class MyWindow(QtWidgets.QMainWindow):
         else:
             for ax in axs[1:]:
                 ax0.get_shared_x_axes().remove(ax)
-
-        # axs = self.axs
-        # ax0 = axs[0][0]
-        # if self.shareX_action.isChecked():
-        #     for ax in axs:
-        #         for a in ax:
-        #             if a != axs[0][0]:
-        #                 a.get_shared_x_axes().join(a, ax0)
-        # else:
-        #     for ax in axs:
-        #         for a in ax:
-        #             if a != axs[0][0]:
-        #                 ax0.get_shared_x_axes().remove(a)
 
     def update_pressed(self):
         shot_number = self.spinBox.value()
@@ -534,3 +532,15 @@ class MyWindow(QtWidgets.QMainWindow):
             else:
                 i, j = (int(x) for x in pos)
                 self.shared_axs.append(self.axs[j][i])
+
+    @QtCore.pyqtSlot(int)
+    def handle_incoming_mds_event(self, shot_number):
+        try:
+            self.mds_update_event.cancel()
+            self.mds_update_event = None
+        except mds.mdsExceptions.SsSUCCESS as e:
+            print(e)
+            logger.error("STUPID MDSPLUS CANCEL ERROR in handle_incoming_mds_event, %s" % e.message)
+        self.mds_update_event = MyEvent(self.event_name)
+        self.mds_update_event.sender.emitter.connect(self.handle_incoming_mds_event)
+        self.fetch_data(shot_number)
