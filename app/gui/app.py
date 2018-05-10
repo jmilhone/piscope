@@ -89,7 +89,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.toolbar = None
         self.axs = None
         self.shared_axs = None
-        self.setGeometry(100, 100, 1200, 1200)
+        # self.setGeometry(100, 100, 1200, 1200)
 
         self.acquiring_data = False
 
@@ -97,7 +97,7 @@ class MyWindow(QtWidgets.QMainWindow):
             self.load_configuration(config_file)
 
             if shot_number is None:
-                self.shot_number = mdsh.get_current_shot(self.tree)
+                self.shot_number = mdsh.get_current_shot(self.server, self.tree)
             else:
                 self.shot_number = shot_number
 

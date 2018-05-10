@@ -3,12 +3,18 @@ import MDSplus as mds
 from .data import Data
 
 
-def get_current_shot(tree):
+def get_current_shot(server, tree):
     try:
-        current_shot = mds.tree.Tree.getCurrent(tree)
+        con = mds.Connection(server)
+        con.openTree(tree, 0)
+        current_shot = int(con.get("$SHOT"))
+        return current_shot
     except mds.mdsExceptions.TreeNOCURRENT as e:
         return None
-    return current_shot
+    except (mds.MdsIpException, mds.TreeFOPENR, mds.TdiMISS_ARG) as e:
+        return None
+    except ValueError as e:
+        return None
 
 
 def check_data_dictionary(data_dict):
