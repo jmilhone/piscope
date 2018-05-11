@@ -8,7 +8,7 @@ class NewConfigDialog(QtWidgets.QDialog):
         super(NewConfigDialog, self).__init__()
         self.setWindowIcon(QtGui.QIcon("Icons/application-wave.png"))
         # Defaults
-        self.server = '192.168.113.62'
+        self.server = 'skywalker.physics.wisc.edu'
         self.event = 'raw_data_ready'
         self.tree = 'wipal'
 
@@ -29,7 +29,10 @@ class NewConfigDialog(QtWidgets.QDialog):
 
         self.sliders = []
         for i in range(6):
-            self.sliders.append(CustomSlider(i, 1.0))
+            if i==0:
+                self.sliders.append(CustomSlider(i, 1.0))
+            else:
+                self.sliders.append(CustomSlider(i, 0.0))
 
 
         # self.row_input.setRange(2, 9)
@@ -139,7 +142,7 @@ class CustomSlider(QtWidgets.QWidget):
         self.slider = QtWidgets.QSlider(QtCore.Qt.Vertical)
         self.label = QtWidgets.QLabel()
         # self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.slider.setValue(1)
+        self.slider.setValue(value)
         self.label.setText(str(self.slider.value()))
         self.vbox = QtWidgets.QVBoxLayout()
         self.vbox.addWidget(self.slider, 5)

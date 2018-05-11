@@ -89,7 +89,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.toolbar = None
         self.axs = None
         self.shared_axs = None
-        # self.setGeometry(100, 100, 1200, 1200)
+        self.setGeometry(100, 100, 500, 500)
 
         self.acquiring_data = False
 
@@ -107,6 +107,7 @@ class MyWindow(QtWidgets.QMainWindow):
                 self.fetch_data(self.shot_number)
 
         else:
+            self.shot_number = None
             self.updateBtn.setDisabled(True)
             self.status.setText("Please Load a Configuration File")
             self.autoUpdate_action.setDisabled(True)
@@ -212,6 +213,9 @@ class MyWindow(QtWidgets.QMainWindow):
             self.enable_actions_after_config()
             self.node_locs = self.get_data_locs()
             self.update_subplot_config(dlg.column_setup)
+            if self.shot_number is None:
+                self.shot_number = mdsh.get_current_shot(self.server, self.tree)
+                self.spinBox.setValue(self.shot_number)
             self.fetch_data(self.shot_number)
 
     def edit_configuration(self):
@@ -265,6 +269,11 @@ class MyWindow(QtWidgets.QMainWindow):
             self.data = None
             self.change_sharex()
 
+
+            if self.shot_number is None:
+                self.shot_number = mdsh.get_current_shot(self.server, self.tree)
+            self.spinBox.setValue(self.shot_number)
+            self.status.setText("Idle")
             # Start up the new MDSplus event if it needs to be
             self.autoUpdate_action.setChecked(update_state)
             self.change_auto_update(update_state)
@@ -283,6 +292,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.update_subplot_config(col_setup)
         self.node_locs = locs
         self.modify_shared_axes_list()
+
 
     def config_parser(self, filename):
         config = ConfigObj(filename)
@@ -310,7 +320,7 @@ class MyWindow(QtWidgets.QMainWindow):
         for col, nrow in enumerate(column_setup):
             for row in range(nrow):
                 new_key = "{0:d}{1:d}".format(row, col)
-                if new_key not in self.config:
+                if new_key not in config:
                     config[new_key] = dict()
 
     def get_data_locs(self):
@@ -370,6 +380,7 @@ class MyWindow(QtWidgets.QMainWindow):
     def fetch_data(self, shot_number):
         if self.acquiring_data:
             # already grabbing data, do nothing
+            print('already acquiring')
             logger.debug("User tried to grab more data when already acquiring.  Ignoring User request.")
             return
 
@@ -389,6 +400,13 @@ class MyWindow(QtWidgets.QMainWindow):
             for name in node_locs[k]:
                 if name not in ignore_items:
                     self.n_positions += 1
+        print(self.n_positions)
+
+        if self.n_positions == 0:
+            self.status.setText('Idle')
+            self.acquiring_data = False
+            return
+
         logger.debug("Asking if tree is available to be opened")
         tree_available = mdsh.check_open_tree(shot_number, self.server, self.tree)
         print("is the tree available?", tree_available)
@@ -417,12 +435,12 @@ class MyWindow(QtWidgets.QMainWindow):
         self.data[loc].append(data)
         logger.debug("Retrieving data for %s" % name)
         if self.completion == self.n_positions:
-            self.acquiring_data = False
             self.handle_mdsplus_data(self.data)
 
     def handle_mdsplus_data(self, data):
         self.data = data
 
+        self.acquiring_data = False
         axs = self.axs
         for axes in axs:
             for ax in axes:
@@ -440,7 +458,11 @@ class MyWindow(QtWidgets.QMainWindow):
             self.data = None
             logger.debug("No data was found for %d" % self.shot_number)
 
-        self.shot_number_label.setText("Shot {0:d}".format(self.shot_number))
+        if self.shot_number == 0:
+            current_shot = mdsh.get_current_shot(self.server, self.tree)
+            self.shot_number_label.setText("Shot {0:d}".format(current_shot))
+        else:
+            self.shot_number_label.setText("Shot {0:d}".format(self.shot_number))
         self.spinBox.setValue(self.shot_number)
         self.figure.tight_layout()
 
@@ -490,6 +512,7 @@ class MyWindow(QtWidgets.QMainWindow):
             # No change, just replot
             self.handle_mdsplus_data(self.data)
         else:
+            print('im trying to fetch data')
             self.shot_number = shot_number
             self.fetch_data(shot_number)
 
