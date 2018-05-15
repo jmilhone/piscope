@@ -3,7 +3,6 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from configobj import ConfigObj
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-import matplotlib.pyplot as plt
 from .workers import Worker
 from ..data import mdsplus_helpers as mdsh
 from ..plotting import data_plotter
@@ -139,14 +138,14 @@ class MyWindow(QtWidgets.QMainWindow):
         self.exit_action.setEnabled(True)
         self.updateBtn.clicked.connect(self.update_pressed)
         self.shareX_action.triggered.connect(self.change_sharex)
-        self.openPanelConfigAction.triggered.connect(self.edit_configuration)
+        self.openPanelConfigAction.triggered.connect(self.open_edit_configuration_dialog)
         self.save_action.triggered.connect(self.save_configuration)
         self.save_as_action.triggered.connect(self.save_as_configuration)
         self.new_config_action.triggered.connect(self.new_configuration)
         self.change_downsample.triggered.connect(self.open_change_downsample)
         self.autoUpdate_action.triggered.connect(self.change_auto_update)
         self.exit_action.triggered.connect(self.close)
-        self.edit_global_action.triggered.connect(self.edit_global_settings)
+        self.edit_global_action.triggered.connect(self.open_edit_global_settings)
         self.open_config_action.triggered.connect(self.open_config_dialog)
         self.show()
 
@@ -221,7 +220,7 @@ class MyWindow(QtWidgets.QMainWindow):
         the MDSplus server, the MDSplus tree, and the MDSplus event. There will not be any information from a previous
         configuration stored after creating a new configuration.
         """
-        xloc, yloc = self.new_dialog_positions()
+        xloc, yloc = self._new_dialog_positions()
         dlg = NewConfigDialog(xloc=xloc, yloc=yloc)
 
         if dlg.exec_():
@@ -249,8 +248,13 @@ class MyWindow(QtWidgets.QMainWindow):
                 self.spinBox.setValue(self.shot_number)
             self.fetch_data(self.shot_number)
 
-    def edit_configuration(self):
-        xloc, yloc = self.new_dialog_positions()
+    def open_edit_configuration_dialog(self):
+        """
+        Opens a EditConfigDialog dialog box where the user can add and edit signals for the current subplots.
+
+        Note: Data will be fetched if the OK on the dialog box is hit.
+        """
+        xloc, yloc = self._new_dialog_positions()
         dlg = EditConfigDialog(self.config, xloc=xloc, yloc=yloc)
         if dlg.exec_():
             self.config = dlg.config
@@ -267,8 +271,11 @@ class MyWindow(QtWidgets.QMainWindow):
                 self.modify_shared_axes_list()
             self.fetch_data(self.shot_number)
 
-    def edit_global_settings(self):
-        xloc, yloc = self.new_dialog_positions()
+    def open_edit_global_settings(self):
+        """
+        Opens a EditGlobalDialog dialog box where the user can edit the server and tree names.
+        """
+        xloc, yloc = self._new_dialog_positions()
         dlg = EditGlobalDialog(self.config, xloc=xloc, yloc=yloc)
         if dlg.exec_():
             self.server = dlg.server
@@ -276,13 +283,25 @@ class MyWindow(QtWidgets.QMainWindow):
             self.config['setup']['server'] = self.server
             self.config['setup']['tree'] = self.tree
 
-    def new_dialog_positions(self):
+    def _new_dialog_positions(self):
+        """
+        Helper function for finding the x and y location to open a dialog box at.
+
+        Returns:
+            xloc (float): x location on the screen
+            yloc (float): y location on the screen
+        """
         rect = self.geometry()
         xloc = rect.x() + 0.1 * rect.width()
         yloc = rect.y() + 0.1 * rect.height()
         return xloc, yloc
 
     def open_config_dialog(self):
+        """
+        Opens a QFileDialog dialog box for picking a configuration file to open.
+
+        If a file is picked, the configuration will replace the current configuration.
+        """
         dlg = QtWidgets.QFileDialog()
         dlg.setFileMode(QtWidgets.QFileDialog.AnyFile)
         dlg.setNameFilters(["Config Files (*.ini)", "Text files (*.txt)"])
@@ -301,7 +320,6 @@ class MyWindow(QtWidgets.QMainWindow):
             self.data = None
             self.change_sharex()
 
-
             if self.shot_number is None:
                 self.shot_number = mdsh.get_current_shot(self.server, self.tree)
             self.spinBox.setValue(self.shot_number)
@@ -311,6 +329,9 @@ class MyWindow(QtWidgets.QMainWindow):
             self.change_auto_update(update_state)
 
     def enable_actions_after_config(self):
+        """
+        Enables a bunch of GUI actions and buttons that are not active when a config file is not loaded.
+        """
         self.updateBtn.setEnabled(True)
         self.shareX_action.setEnabled(True)
         self.autoUpdate_action.setEnabled(True)
@@ -319,6 +340,12 @@ class MyWindow(QtWidgets.QMainWindow):
         self.save_as_action.setEnabled(True)
 
     def load_configuration(self, filename):
+        """
+        Loads a configuration file named filename and replaces the old configuration stored in memory.
+
+        Args:
+            filename (str): config file to be opened and used
+        """
         #col_setup, locs = self.config_parser(filename)
         config, server, tree, event_name, col_setup, locs = parser.config_parser(filename)
         self.config = config
@@ -332,7 +359,14 @@ class MyWindow(QtWidgets.QMainWindow):
         self.modify_shared_axes_list()
 
     def update_subplot_config(self, col_setup):
-        print(col_setup)
+        """
+        Updates the subplot configuration based on the new column setup.
+
+        The canvas, axes, figure, and toolbar are deleted and recreated based on the new column setup.
+
+        Args:
+            col_setup (list): list of ints for the number of plots in a column
+        """
         if self.figure is not None:
             self.vbox.removeWidget(self.toolbar)
             self.vbox.removeWidget(self.canvas)
@@ -361,6 +395,22 @@ class MyWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(int)
     def fetch_data(self, shot_number):
+        """
+        Starts a QThreadPool of Workers (workers.Worker) to fetch data if the tree can be opened.
+
+        Function exits immediately if self.acquiring_data is True
+
+        Next step is to count the number of signals to be fetched.
+
+        Before starting workers, we check to see if the tree can be opened for this shot number.  If not, we call
+            self.handle_mdsplus_data with data=None and exit.
+
+        If the tree is available, we start a QThreadPool with instances of Worker for fetching data.  Each Worker
+            fetches only one signal.
+
+        Args:
+            shot_number (int): Shot number to fetch data from
+        """
         if self.acquiring_data:
             # already grabbing data, do nothing
             print('already acquiring')
@@ -531,7 +581,7 @@ class MyWindow(QtWidgets.QMainWindow):
         config_obj.write()
 
     def open_change_downsample(self):
-        xloc, yloc = self.new_dialog_positions()
+        xloc, yloc = self._new_dialog_positions()
         dlg = EditDownsampleDialog(self.downsampling_points, xloc=xloc, yloc=yloc)
         if dlg.exec_():
             self.downsampling_points = dlg.points
