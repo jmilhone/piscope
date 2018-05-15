@@ -140,6 +140,7 @@ class CustomSlider(QtWidgets.QWidget):
         self.index = index
         self.value = value
         self.slider = QtWidgets.QSlider(QtCore.Qt.Vertical)
+        self.slider.setSingleStep(1)
         self.label = QtWidgets.QLabel()
         # self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.slider.setValue(value)

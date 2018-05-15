@@ -2,6 +2,8 @@ from __future__ import division, print_function
 from distutils.util import strtobool
 from .resample import DataDisplayDownsampler
 import numpy as np
+from ..gui.helpers import global_lcm
+import matplotlib.pyplot as plt
 
 
 def plot_all_data(axs, locs, data, downsampling=10000):
@@ -80,4 +82,21 @@ def plot(ax, info_dict, data, downsampling=10000):
         ax.callbacks.connect('xlim_changed', down_sampler.update)
 
     return down_sampler
+
+
+def create_figure(column_setup):
+    figure = plt.figure(0)
+    axs = []
+    cols = [x for x in column_setup if x > 0]
+    lcm = global_lcm(cols)
+    ncols = len(cols)
+    for idx, item in enumerate(cols):
+        factor = lcm // item
+        axes = []
+        for j in range(item):
+            ax = plt.subplot2grid((lcm, ncols), (factor * j, idx), rowspan=factor)
+            axes.append(ax)
+        axs.append(axes)
+
+    return figure, axs
 

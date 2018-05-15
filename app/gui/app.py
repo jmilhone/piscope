@@ -7,12 +7,12 @@ import matplotlib.pyplot as plt
 from .workers import Worker
 from ..data import mdsplus_helpers as mdsh
 from ..plotting import data_plotter
+from ..config import parser
 from .events import MyEvent
 from .edit_configuration import EditConfigDialog
 from .new_configuration import NewConfigDialog
 from .downsample_dialog import EditDownsampleDialog
 from .edit_global import EditGlobalDialog
-from .helpers import global_lcm
 from distutils.util import strtobool
 import logging
 import MDSplus as mds
@@ -25,8 +25,25 @@ logger = logging.getLogger('pi-scope-logger')
 
 
 class MyWindow(QtWidgets.QMainWindow):
+    """The PiScope Main Window
 
-    def __init__(self, config_file, shot_number=None):
+    Note: Auto-updating will only work if you are on the same subnet as your MDSplus server
+    """
+
+    def __init__(self, config_file=None, shot_number=None):
+        """
+
+        Args:
+            config_file (str, optional): filepath to a config file (*.ini)
+            shot_number (int, optional): shot number to open
+
+        Attributes:
+             config (dict): Configuration containing information for data retrieval and plotting
+             server (str): MDSplus server to retrieve data from
+             tree (str): MDSplus tree name, default is wipal
+             event_name (str): MDSplus event name to catch for auto-update.  Note this only works if you are on the same
+                subnet as your MDSplus server
+        """
         super(MyWindow, self).__init__()
         self.setWindowTitle("Big Red Ball PiScope")
         self.setWindowIcon(QtGui.QIcon("Icons/application-wave.png"))
@@ -130,14 +147,21 @@ class MyWindow(QtWidgets.QMainWindow):
         self.autoUpdate_action.triggered.connect(self.change_auto_update)
         self.exit_action.triggered.connect(self.close)
         self.edit_global_action.triggered.connect(self.edit_global_settings)
-        self.open_config_action.triggered.connect(self.onOpenClick)
+        self.open_config_action.triggered.connect(self.open_config_dialog)
         self.show()
 
     def check_alive(self):
+        """
+        Checks the status of the self.mds_update_event thread and writes to log.
+        """
         logger.debug("event watcher alive? % s" % str(self.mds_update_event.isAlive()))
-        # print("MDSplus event watcher, alive or dead?: ", self.mds_update_event.isAlive())
 
     def init_UI(self):
+        """
+        Initializes the layout of the BRB PiScope User Interface
+
+        The main layout is a vertical box layout (self.vbox).
+        """
         # Add all of the file actions to the file menu
         self.file_menu.addAction(self.new_config_action)
         self.file_menu.addAction(self.open_config_action)
@@ -154,14 +178,12 @@ class MyWindow(QtWidgets.QMainWindow):
         self.option_menu.addAction(self.shareX_action)
         self.option_menu.addAction(self.change_downsample)
 
-
         self.autoUpdate_action.setCheckable(True)
         self.shareX_action.setCheckable(True)
         self.spinBox.setRange(0, 999999)
         self.spinBox.setKeyboardTracking(False)
 
         self.progess_bar.setValue(0.0)
-
 
         # Take care of fonts here
         self.font.setPointSize(18)
@@ -192,6 +214,13 @@ class MyWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.centralWidget)
 
     def new_configuration(self):
+        """
+        Opens a NewConfigDialog instance / dialog box to create a new configuration.
+
+        User can create a new BRB PiScope configuration using this dialog.  User can configure the subplot orientation,
+        the MDSplus server, the MDSplus tree, and the MDSplus event. There will not be any information from a previous
+        configuration stored after creating a new configuration.
+        """
         xloc, yloc = self.new_dialog_positions()
         dlg = NewConfigDialog(xloc=xloc, yloc=yloc)
 
@@ -203,16 +232,18 @@ class MyWindow(QtWidgets.QMainWindow):
                                    'event': dlg.event,
                                    'tree': dlg.tree,
                                    }
-
-            self.add_grid_keys(new_config, dlg.column_setup)
+            parser.add_grid_keys(new_config, dlg.column_setup)
+            # self.add_grid_keys(new_config, dlg.column_setup)
             self.config = new_config
             self.server = dlg.server
             self.tree = dlg.tree
             self.event_name = dlg.event
 
             self.enable_actions_after_config()
-            self.node_locs = self.get_data_locs()
+            #self.node_locs = self.get_data_locs()
+            self.node_locs = parser.get_data_locs(self.config)
             self.update_subplot_config(dlg.column_setup)
+
             if self.shot_number is None:
                 self.shot_number = mdsh.get_current_shot(self.server, self.tree)
                 self.spinBox.setValue(self.shot_number)
@@ -223,7 +254,8 @@ class MyWindow(QtWidgets.QMainWindow):
         dlg = EditConfigDialog(self.config, xloc=xloc, yloc=yloc)
         if dlg.exec_():
             self.config = dlg.config
-            self.node_locs = self.get_data_locs()
+            # self.node_locs = self.get_data_locs()
+            self.node_locs = self.get_data_locs(self.config)
             sharex = self.shareX_action.isChecked()
             if sharex:
                 self.shareX_action.setChecked(False)
@@ -250,7 +282,7 @@ class MyWindow(QtWidgets.QMainWindow):
         yloc = rect.y() + 0.1 * rect.height()
         return xloc, yloc
 
-    def onOpenClick(self):
+    def open_config_dialog(self):
         dlg = QtWidgets.QFileDialog()
         dlg.setFileMode(QtWidgets.QFileDialog.AnyFile)
         dlg.setNameFilters(["Config Files (*.ini)", "Text files (*.txt)"])
@@ -287,87 +319,38 @@ class MyWindow(QtWidgets.QMainWindow):
         self.save_as_action.setEnabled(True)
 
     def load_configuration(self, filename):
-        col_setup, locs = self.config_parser(filename)
+        #col_setup, locs = self.config_parser(filename)
+        config, server, tree, event_name, col_setup, locs = parser.config_parser(filename)
+        self.config = config
+        self.server = server
+        self.tree = tree
+        self.event_name = event_name
+        self.node_locs = locs
+
         self.enable_actions_after_config()
         self.update_subplot_config(col_setup)
-        self.node_locs = locs
         self.modify_shared_axes_list()
 
-
-    def config_parser(self, filename):
-        config = ConfigObj(filename)
-        config = config.dict()
-        self.config = config
-
-        col_setup = self.config['setup']['col']
-        col_setup = [int(x) for x in col_setup]
-
-        # determine grid keys
-        self.add_grid_keys(self.config, col_setup)
-
-        try:
-            self.tree = self.config['setup']['tree']
-        except KeyError:
-            self.config['setup']['tree'] = 'wipal'
-            self.tree = 'wipal'
-
-        self.event_name = self.config['setup']['event']
-        self.server = self.config['setup']['server']
-        data_locs = self.get_data_locs()
-        return col_setup, data_locs
-
-    def add_grid_keys(self, config, column_setup):
-        for col, nrow in enumerate(column_setup):
-            for row in range(nrow):
-                new_key = "{0:d}{1:d}".format(row, col)
-                if new_key not in config:
-                    config[new_key] = dict()
-
-    def get_data_locs(self):
-        data_locs = {}
-        for key in self.config.keys():
-            if key.lower() != 'setup':
-                data_locs[key] = self.config[key]
-                self.parse_data_colors(key)
-        return data_locs
-
-    def parse_data_colors(self, key):
-        local_config = self.config[key]
-        keys = [x for x in local_config.keys()]
-        keys.sort()
-        top_ignore = ['xlabel', 'ylabel', 'xlim', 'ylim', 'legend', 'noresample', 'xshare']
-        j = 0
-        for k in keys:
-            if k not in top_ignore:
-                # this is a signal
-                # time to check if it has a color picked already
-                if 'color' not in local_config[k].keys():
-                    self.config[key][k]['color'] = default_colors[j % 10]
-                    j += 1
-
-    # def update_subplot_config(self, nrow, ncol):
     def update_subplot_config(self, col_setup):
+        print(col_setup)
         if self.figure is not None:
             self.vbox.removeWidget(self.toolbar)
             self.vbox.removeWidget(self.canvas)
+            self.figure.clear()
+            self.figure = None
+            self.toolbar = None
+            self.canvas = None
+
+        if self.axs is not None:
+            for ax in self.axs:
+                ax = None
 
         self.vbox.removeItem(self.hbox)
         self.vbox.removeItem(self.shot_hbox)
 
-        #self.figure, self.axs = plt.subplots(nrow, ncol)
-        self.figure = plt.figure(0)
-        self.axs = []
         cols = [x for x in col_setup if x > 0]
-        lcm = global_lcm(cols)
-        ncols = len(cols)
-        for idx, item in enumerate(cols):
-            factor = lcm // item
-            axs = []
-            for j in range(item):
-                ax = plt.subplot2grid((lcm, ncols), (factor*j, idx), rowspan=factor)
-                axs.append(ax)
-            self.axs.append(axs)
 
+        self.figure, self.axs = data_plotter.create_figure(cols)
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
 
@@ -402,6 +385,7 @@ class MyWindow(QtWidgets.QMainWindow):
                     self.n_positions += 1
         print(self.n_positions)
 
+        # No data, turn acquring_data off, go back to event loop
         if self.n_positions == 0:
             self.status.setText('Idle')
             self.acquiring_data = False
@@ -410,12 +394,16 @@ class MyWindow(QtWidgets.QMainWindow):
         logger.debug("Asking if tree is available to be opened")
         tree_available = mdsh.check_open_tree(shot_number, self.server, self.tree)
         print("is the tree available?", tree_available)
+
+        # Can't open tree, set acquiring_data to false, call handle_mdplus_data(None)
         if not tree_available:
-            print('passing None to hanld mdsplus data')
-            self.handle_mdsplus_data(None)
+            # print('passing None to handle mdsplus data')
             self.acquiring_data = False
+            self.handle_mdsplus_data(None)
             logger.warn("tree was unable to be opened. shot = %d" % shot_number)
             return
+
+        # There is data to grab and the tree exists.
         # Now reloop over and start the workers
         logger.debug("Asking for data")
         for k in keys:
@@ -438,13 +426,17 @@ class MyWindow(QtWidgets.QMainWindow):
             self.handle_mdsplus_data(self.data)
 
     def handle_mdsplus_data(self, data):
+        # Finished acquiring data
         self.data = data
-
         self.acquiring_data = False
+
+        # Clear all the axes
         axs = self.axs
         for axes in axs:
             for ax in axes:
                 ax.cla()
+
+        # Check if data was actually passed to this function.  Plot if it is.
         if data is None:
             self.status.setText("Error opening Shot {0:d}".format(self.shot_number))
             logger.warn("No data for %d" % self.shot_number)
@@ -458,14 +450,16 @@ class MyWindow(QtWidgets.QMainWindow):
             self.data = None
             logger.debug("No data was found for %d" % self.shot_number)
 
+        # Handle MDSplus shot number being zero
         if self.shot_number == 0:
             current_shot = mdsh.get_current_shot(self.server, self.tree)
             self.shot_number_label.setText("Shot {0:d}".format(current_shot))
         else:
             self.shot_number_label.setText("Shot {0:d}".format(self.shot_number))
+
+        # Redraw GUI elements
         self.spinBox.setValue(self.shot_number)
         self.figure.tight_layout()
-
         self.toolbar.update()
         self.toolbar.push_current()
         self.canvas.draw()
