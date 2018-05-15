@@ -37,6 +37,7 @@ def check_open_tree(shot_number, server, tree):
         # print(e.message)
         return False
 
+
 def retrieve_signal(shot_number, signal_info, loc_name, signal_name, server, tree):
 
     try:
@@ -63,8 +64,16 @@ def retrieve_data(connection, node_loc, name):
             xstring = " ".join(xstring)
         else:
             xstring = node_loc['x']
-        data = connection.get(ystring).data()
-        t = connection.get(xstring).data()
+
+        data = connection.get(ystring)
+        t = connection.get(xstring)
+
+        # apparently you can get None without any errors
+        if data is None or t is None:
+            return None
+
+        data = data.data()
+        t = t.data()
 
         return Data(name, t, data, node_loc['color'])
 
