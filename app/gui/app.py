@@ -63,7 +63,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.n_positions = 0.0
         self.completion = 0.0
 
-
         # Menu Bar stuff
         self.menu = self.menuBar()
         self.file_menu = self.menu.addMenu("&File")
@@ -465,6 +464,16 @@ class MyWindow(QtWidgets.QMainWindow):
                     self.threadpool.start(worker)
 
     def handle_returning_data(self, data_tuple):
+        """
+        Adds returning MDSplus data to its location in the self.data dictionary
+
+        This function is connected to the output of the Workers called in fetch_data.  self.completion is
+        counting the number of times this function is called.  If it self.completion equals self.n_positions, all of the
+        data has arrived and self.handle_mdsplus_data can be called.
+
+        Args:
+            data_tuple (str, str, data.Data): (location of data in dictionary, name of signal, instance of data.Data)
+        """
         self.completion += 1
 
         self.progess_bar.setValue(self.completion / self.n_positions * 100.0)
@@ -476,6 +485,18 @@ class MyWindow(QtWidgets.QMainWindow):
             self.handle_mdsplus_data(self.data)
 
     def handle_mdsplus_data(self, data):
+        """
+        Plots data if there is data to be plotted.  Otherwise, plot is cleared and function is exited.
+
+        If data is None, there was an error opening the shot
+
+        If data is an empty dictionary, there wasn't any data in the tree.
+
+        Else, we can plot the data by calling data_plotter.plot_all_data
+
+        Args:
+            data (dict): data dictionary with all of the signals to be plotted
+        """
         # Finished acquiring data
         self.data = data
         self.acquiring_data = False
@@ -516,6 +537,12 @@ class MyWindow(QtWidgets.QMainWindow):
         self.progess_bar.setValue(0.0)
 
     def change_auto_update(self, state):
+        """
+        Toggles auto-update functionality with MDSplus events
+
+        Args:
+            state (QState): state emitted from action, (not used)
+        """
         if self.event_name:
             # if state == QtCore.Qt.Checked:
             if self.autoUpdate_action.isChecked():
@@ -536,6 +563,11 @@ class MyWindow(QtWidgets.QMainWindow):
                     logger.debug("Auto update is now off.")
 
     def change_sharex(self):
+        """
+        Toggles the share-x axis functionality of the subplots
+
+        Note: only axses listed in self.shared_axs can be shared
+        """
         axs = self.shared_axs
 
         if axs is None or len(axs) == 1:
@@ -551,6 +583,12 @@ class MyWindow(QtWidgets.QMainWindow):
                 ax0.get_shared_x_axes().remove(ax)
 
     def update_pressed(self):
+        """
+        Calls self.fetch_data if the shot_number in self.spinBox is different from self.shot_number or
+        if self.data is None
+
+        Otherwise, the data is just replotted.
+        """
         shot_number = self.spinBox.value()
         if shot_number == self.shot_number and self.data is not None:
             # No change, just replot
@@ -561,6 +599,11 @@ class MyWindow(QtWidgets.QMainWindow):
             self.fetch_data(shot_number)
 
     def save_as_configuration(self):
+        """
+
+        Returns:
+
+        """
         self.save_as_dialog = QtWidgets.QFileDialog()
         self.save_as_dialog.fileSelected.connect(self._save_configuration)
         self.save_as_dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
@@ -568,12 +611,25 @@ class MyWindow(QtWidgets.QMainWindow):
         self.save_as_dialog.exec_()
 
     def save_configuration(self):
+        """
+
+        Returns:
+
+        """
         if self.config_filename:
             self._save_configuration(self.config_filename)
         else:
             self.save_as_configuration()
 
     def _save_configuration(self, filename):
+        """
+
+        Args:
+            filename:
+
+        Returns:
+
+        """
         self.config_filename = filename
         config_obj = ConfigObj(indent_type="    ")
         config_obj.filename = self.config_filename
@@ -581,6 +637,11 @@ class MyWindow(QtWidgets.QMainWindow):
         config_obj.write()
 
     def open_change_downsample(self):
+        """
+
+        Returns:
+
+        """
         xloc, yloc = self._new_dialog_positions()
         dlg = EditDownsampleDialog(self.downsampling_points, xloc=xloc, yloc=yloc)
         if dlg.exec_():
@@ -592,6 +653,11 @@ class MyWindow(QtWidgets.QMainWindow):
                 self.fetch_data(self.shot_number)
 
     def modify_shared_axes_list(self):
+        """
+
+        Returns:
+
+        """
         self.shared_axs = []
         for pos in self.node_locs:
             if 'xshare' in self.node_locs[pos] and not strtobool(self.node_locs[pos]['xshare']):
@@ -602,6 +668,14 @@ class MyWindow(QtWidgets.QMainWindow):
 
     @QtCore.pyqtSlot(int)
     def handle_incoming_mds_event(self, shot_number):
+        """
+
+        Args:
+            shot_number:
+
+        Returns:
+
+        """
         try:
             self.mds_update_event.cancel()
             self.mds_update_event = None
