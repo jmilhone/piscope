@@ -40,6 +40,8 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.ylim_low = ScientificDoubleSpinBox(self)
         self.ylim_high = ScientificDoubleSpinBox(self)
 
+        self.signal_label = QtWidgets.QLabel(self)
+        # self.signal_hbox
         self.xlabel = QtWidgets.QLineEdit(self)
         self.ylabel = QtWidgets.QLineEdit(self)
         self.label = QtWidgets.QLineEdit(self)
@@ -49,7 +51,7 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.xlab = QtWidgets.QLabel(self)
         self.ylab = QtWidgets.QLabel(self)
         self.lab = QtWidgets.QLabel(self)
-
+        self.toggle_hbox = QtWidgets.QHBoxLayout()
         self.color_label = QtWidgets.QLabel(self)
         self.color_chosen = QtWidgets.QLabel(self)
         self.color_input = QtWidgets.QLabel(self)
@@ -93,12 +95,13 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.xlab.setText("X Label: ")
         self.ylab.setText("Y Label: ")
         self.lab.setText("Signal Name")
-        self.combo_label.setText("Plot: ")
+        self.combo_label.setText("Subplot Settings: ")
+        self.signal_label.setText("Signal Settings: ")
         if xloc is None:
             xloc = 200
         if yloc is None:
             yloc = 200
-        self.setGeometry(xloc, yloc, 500, 200)
+        self.setGeometry(xloc, yloc, 600, 200)
         self.setWindowTitle('Edit Configuration')
 
         self.xlim_check.setText("X Limits")
@@ -123,8 +126,6 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.hbox.addWidget(self.combo_label)
         self.hbox.addWidget(self.combo)
 
-        self.vbox.addLayout(self.hbox)
-        self.vbox.addWidget(self.item_list)
 
         self.xhbox.addWidget(self.x_qlabel)
         self.xhbox.addWidget(self.x_input)
@@ -133,9 +134,10 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.options_box.addWidget(self.xlabel)
         self.options_box.addWidget(self.ylab)
         self.options_box.addWidget(self.ylabel)
-        self.options_box.addWidget(self.legend)
-        self.options_box.addWidget(self.no_resample)
-        self.options_box.addWidget(self.xshareable)
+        self.toggle_hbox.addWidget(self.legend)
+        self.toggle_hbox.addWidget(self.no_resample)
+        self.toggle_hbox.addWidget(self.xshareable)
+        self.toggle_hbox.addStretch()
 
         self.lab_box.addWidget(self.lab)
         self.lab_box.addWidget(self.label)
@@ -153,9 +155,13 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.ylim_box.addWidget(self.ylim_high, 1)
         self.ylim_box.addStretch()
 
+        self.vbox.addLayout(self.hbox)
         self.vbox.addLayout(self.options_box)
+        self.vbox.addLayout(self.toggle_hbox)
         self.vbox.addLayout(self.xlim_box)
         self.vbox.addLayout(self.ylim_box)
+        self.vbox.addWidget(self.signal_label)
+        self.vbox.addWidget(self.item_list)
         self.vbox.addLayout(self.lab_box)
         self.vbox.addLayout(self.xhbox)
         self.vbox.addLayout(self.yhbox)

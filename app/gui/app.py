@@ -600,9 +600,9 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def save_as_configuration(self):
         """
+        Opens as Save As dialog box.
 
-        Returns:
-
+        Calls self._save_configuration if a file is selected
         """
         self.save_as_dialog = QtWidgets.QFileDialog()
         self.save_as_dialog.fileSelected.connect(self._save_configuration)
@@ -612,9 +612,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def save_configuration(self):
         """
-
-        Returns:
-
+        If there is a config filename, the config is saved.  Else, a Save As dialog is opened.
         """
         if self.config_filename:
             self._save_configuration(self.config_filename)
@@ -623,12 +621,10 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def _save_configuration(self, filename):
         """
+        Saves configuration to filename
 
         Args:
-            filename:
-
-        Returns:
-
+            filename (str): file to save configuration to
         """
         self.config_filename = filename
         config_obj = ConfigObj(indent_type="    ")
@@ -638,9 +634,9 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def open_change_downsample(self):
         """
+        Opens a EditDownSampleDialog dialog box
 
-        Returns:
-
+        If Ok is selected, self.downsampling_points is overwritten
         """
         xloc, yloc = self._new_dialog_positions()
         dlg = EditDownsampleDialog(self.downsampling_points, xloc=xloc, yloc=yloc)
@@ -654,9 +650,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def modify_shared_axes_list(self):
         """
-
-        Returns:
-
+        Updates the list of shared x-axes (self.shared_axs)
         """
         self.shared_axs = []
         for pos in self.node_locs:
@@ -669,12 +663,10 @@ class MyWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot(int)
     def handle_incoming_mds_event(self, shot_number):
         """
+        Cancels the old event, starts a new one, and calls fetch data on the incoming shot_number
 
         Args:
-            shot_number:
-
-        Returns:
-
+            shot_number (int): shot number from the MDSplus event
         """
         try:
             self.mds_update_event.cancel()
