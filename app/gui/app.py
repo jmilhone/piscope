@@ -258,7 +258,7 @@ class MyWindow(QtWidgets.QMainWindow):
         if dlg.exec_():
             self.config = dlg.config
             # self.node_locs = self.get_data_locs()
-            self.node_locs = self.get_data_locs(self.config)
+            self.node_locs = parser.get_data_locs(self.config)
             sharex = self.shareX_action.isChecked()
             if sharex:
                 self.shareX_action.setChecked(False)
