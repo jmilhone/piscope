@@ -321,8 +321,13 @@ class MyWindow(QtWidgets.QMainWindow):
 
             if self.shot_number is None:
                 self.shot_number = mdsh.get_current_shot(self.server, self.tree)
-            self.spinBox.setValue(self.shot_number)
-            self.status.setText("Idle")
+
+            if self.shot_number is None:
+                self.spinBox.setValue(0)
+                self.status.setText("Error Accessing Server")
+            else:
+                self.spinBox.setValue(self.shot_number)
+                self.status.setText("Idle")
             # Start up the new MDSplus event if it needs to be
             self.autoUpdate_action.setChecked(update_state)
             self.change_auto_update(update_state)
