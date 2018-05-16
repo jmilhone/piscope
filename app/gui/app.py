@@ -120,7 +120,11 @@ class MyWindow(QtWidgets.QMainWindow):
                 self.spinBox.setValue(self.shot_number)
                 self.shot_number_label.setText("Shot Number: {0:d}".format(self.shot_number))
                 self.fetch_data(self.shot_number)
-
+            else:
+                # The only way this can happen is the user didn't enter a shot and we
+                # have failed to get a shot number from the server
+                self.spinBox.setValue(0)
+                self.status.setText("Error Accessing Server")
         else:
             self.shot_number = None
             self.updateBtn.setDisabled(True)
