@@ -29,16 +29,21 @@ accessed by clicking on File -> New Configuration*
 
 You can create a new configuration by clicking File -> New Configuration.  Here, you can edit these attributes:
 
-- Number of Rows
-- Number of Columns
 - Server Address
     - Address for the MDSplus server
 - MDSplus Event Name
     - Name for the MDSplus event you want to catch for auto-updating.  This will only work inside the WiPAL private
     network.
+- For each column (up to 6), you can specify the number of plots (up to 6).
+
+![Edit Global Configuration Window](/source/images/edit_global_configuration.png)*Edit global configuration dialog box
+accessed by clicking on Edit -> Edit Global Settings
+
+If you want to change the tree name or server address, you can change them by clicking on Edit -> Edit Global Settings
+to change them.
 
 ![Edit Configuration Window](/source/images/edit_configuration.png)*Edit configuration dialog box
-accessed by clicking on File -> Edit Configuration
+accessed by clicking on Edit -> Edit Configuration
 
 Here you have access to changing the following attributes for a given plot/axis:
 
