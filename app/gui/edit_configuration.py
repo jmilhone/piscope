@@ -297,7 +297,8 @@ class EditConfigDialog(QtWidgets.QDialog):
         if ytext and xtext and label:
             if idx != 0:
                 current_label = item.text()
-                del self.config[pos][current_label]
+                self.config[pos].pop(current_label, None)
+                # del self.config[pos][current_label]
             self.config[pos][label] = dict()
             self.config[pos][label]['x'] = xtext
             self.config[pos][label]['y'] = ytext
@@ -305,7 +306,8 @@ class EditConfigDialog(QtWidgets.QDialog):
         else:
             if idx != 0:
                 current_label = item.text()
-                del self.config[pos][current_label]
+                self.config[pos].pop(current_label, None)
+                # del self.config[pos][current_label]
 
         xlabel = self.xlabel.text()
         ylabel = self.ylabel.text()
@@ -318,11 +320,15 @@ class EditConfigDialog(QtWidgets.QDialog):
             xlow = self.xlim_low.value()
             xhigh = self.xlim_high.value()
             self.config[pos]['xlim'] = [str(xlow), str(xhigh)]
+        else:
+            self.config[pos].pop('xlim', None)
 
         if self.ylim_check.isChecked():
             ylow = self.ylim_low.value()
             yhigh = self.ylim_high.value()
             self.config[pos]['ylim'] = [str(ylow), str(yhigh)]
+        else:
+            self.config[pos].pop('ylim', None)
 
         if self.no_resample.isChecked():
             self.config[pos]['noresample'] = str(True)
