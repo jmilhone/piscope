@@ -79,7 +79,8 @@ def retrieve_data(connection, node_loc, name):
 
     except mds.MdsIpException:
         return None
-
+    except mds.TreeNODATA as e:
+        return None
     except KeyError:
         return None
 
