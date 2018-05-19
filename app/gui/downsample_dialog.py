@@ -3,8 +3,18 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 
 class EditDownsampleDialog(QtWidgets.QDialog):
+    """
+
+    """
 
     def __init__(self, points, xloc=None, yloc=None):
+        """
+
+        Args:
+            points:
+            xloc:
+            yloc:
+        """
         super(EditDownsampleDialog, self).__init__()
         self.setWindowIcon(QtGui.QIcon("Icons/application-wave.png"))
         self.buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
@@ -23,6 +33,15 @@ class EditDownsampleDialog(QtWidgets.QDialog):
         self.points_input.valueChanged.connect(self.points_change)
 
     def init_UI(self, xloc=None, yloc=None):
+        """
+
+        Args:
+            xloc:
+            yloc:
+
+        Returns:
+
+        """
         if xloc is None:
             xloc = 200
 
@@ -45,5 +64,13 @@ class EditDownsampleDialog(QtWidgets.QDialog):
         self.setGeometry(xloc, yloc, 300, 100)
 
     def points_change(self, value):
+        """
+
+        Args:
+            value:
+
+        Returns:
+
+        """
         self.points = value
 

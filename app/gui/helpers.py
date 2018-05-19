@@ -2,6 +2,15 @@ from __future__ import division, print_function
 
 
 def find_lcm(num1, num2):
+    """
+
+    Args:
+        num1:
+        num2:
+
+    Returns:
+
+    """
     if (num1 > num2):
         num = num1
         den = num2
@@ -19,6 +28,14 @@ def find_lcm(num1, num2):
 
 
 def global_lcm(numbers):
+    """
+
+    Args:
+        numbers:
+
+    Returns:
+
+    """
     if len(numbers) < 2:
         return numbers[0]
     elif len(numbers) == 2:

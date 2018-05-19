@@ -4,7 +4,7 @@ import traceback
 import sys
 
 class WorkerSignals(QtCore.QObject):
-    '''
+    """
     Defines the signals available from a running worker thread.
 
     Supported signals are:
@@ -21,7 +21,7 @@ class WorkerSignals(QtCore.QObject):
     progress
         `int` indicating % progress
 
-    '''
+    """
     finished = QtCore.pyqtSignal()
     error = QtCore.pyqtSignal(tuple)
     result = QtCore.pyqtSignal(object)
@@ -29,7 +29,17 @@ class WorkerSignals(QtCore.QObject):
 
 
 class Worker(QtCore.QRunnable):
+    """
+
+    """
     def __init__(self, fn, *args, **kwargs):
+        """
+
+        Args:
+            fn:
+            *args:
+            **kwargs:
+        """
         super(Worker, self).__init__()
         self.fn = fn
         self.args = args
@@ -39,10 +49,9 @@ class Worker(QtCore.QRunnable):
 
     @QtCore.pyqtSlot()
     def run(self):
-
-        '''
+        """
         Initialise the runner function with passed args, kwargs.
-        '''
+        """
 
         # Retrieve args/kwargs here; and fire processing using them
         try:

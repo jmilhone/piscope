@@ -4,8 +4,18 @@ from copy import deepcopy
 
 
 class EditGlobalDialog(QtWidgets.QDialog):
+    """
+
+    """
 
     def __init__(self, config, xloc=None, yloc=None):
+        """
+
+        Args:
+            config:
+            xloc:
+            yloc:
+        """
         super(EditGlobalDialog, self).__init__()
         self.config = deepcopy(config)
         self.setWindowIcon(QtGui.QIcon("Icons/application-wave.png"))
@@ -33,6 +43,15 @@ class EditGlobalDialog(QtWidgets.QDialog):
         self.tree_input.editingFinished.connect(self.update_tree)
 
     def init_UI(self, xloc, yloc):
+        """
+
+        Args:
+            xloc:
+            yloc:
+
+        Returns:
+
+        """
         if xloc is None:
             xloc = 200
         if yloc is None:
@@ -58,7 +77,17 @@ class EditGlobalDialog(QtWidgets.QDialog):
         self.setLayout(self.vbox)
 
     def update_server(self):
+        """
+
+        Returns:
+
+        """
         self.server = self.server_input.text()
 
     def update_tree(self):
+        """
+
+        Returns:
+
+        """
         self.tree = self.tree_input.text()

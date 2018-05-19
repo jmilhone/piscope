@@ -3,8 +3,17 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 
 class NewConfigDialog(QtWidgets.QDialog):
+    """
+
+    """
 
     def __init__(self, xloc=None, yloc=None):
+        """
+
+        Args:
+            xloc:
+            yloc:
+        """
         super(NewConfigDialog, self).__init__()
         self.setWindowIcon(QtGui.QIcon("Icons/application-wave.png"))
         # Defaults
@@ -60,6 +69,15 @@ class NewConfigDialog(QtWidgets.QDialog):
             slider.valueChanged.connect(self.update_column_config)
 
     def init_UI(self, xloc=None, yloc=None):
+        """
+
+        Args:
+            xloc:
+            yloc:
+
+        Returns:
+
+        """
         if xloc is None:
             xloc = 200
         if yloc is None:
@@ -118,24 +136,58 @@ class NewConfigDialog(QtWidgets.QDialog):
     #     self.ncol = col
 
     def update_server(self):
+        """
+
+        Returns:
+
+        """
         self.server = self.server_input.text()
 
     def update_event(self):
+        """
+
+        Returns:
+
+        """
         self.event = self.event_input.text()
 
     def update_tree(self):
+        """
+
+        Returns:
+
+        """
         self.tree = self.tree_input.text()
 
     def update_column_config(self, value):
+        """
+
+        Args:
+            value:
+
+        Returns:
+
+        """
         sender = self.sender()
         self.column_setup[sender.index] = value
 
 
 class CustomSlider(QtWidgets.QWidget):
+    """
+
+    """
 
     valueChanged = QtCore.pyqtSignal(int)
 
     def __init__(self, index, value, *args, **kwargs):
+        """
+
+        Args:
+            index:
+            value:
+            *args:
+            **kwargs:
+        """
         super(CustomSlider, self).__init__(*args, **kwargs)
         self.index = index
         self.value = value
@@ -153,6 +205,14 @@ class CustomSlider(QtWidgets.QWidget):
         self.slider.valueChanged.connect(self.update_value)
 
     def update_value(self, value):
+        """
+
+        Args:
+            value:
+
+        Returns:
+
+        """
         self.value = value
         self.label.setText(str(value))
         self.valueChanged.emit(self.value)

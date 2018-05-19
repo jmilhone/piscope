@@ -9,8 +9,17 @@ default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
                   '#bcbd22', '#17becf']
 
 class EditConfigDialog(QtWidgets.QDialog):
+    """
 
+    """
     def __init__(self, config, xloc=None, yloc=None):
+        """
+
+        Args:
+            config:
+            xloc:
+            yloc:
+        """
         super(EditConfigDialog, self).__init__()
         self.config = deepcopy(config)
         self.setWindowIcon(QtGui.QIcon("Icons/application-wave.png"))
@@ -86,6 +95,15 @@ class EditConfigDialog(QtWidgets.QDialog):
 
 
     def init_UI(self, xloc=None, yloc=None):
+        """
+
+        Args:
+            xloc:
+            yloc:
+
+        Returns:
+
+        """
         self.x_qlabel.setText("X: ")
         self.y_qlabel.setText("Y: ")
 
@@ -174,12 +192,28 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.populate_signal_fields(0)
 
     def change_list_view(self, idx):
+        """
+
+        Args:
+            idx:
+
+        Returns:
+
+        """
         text = self.grid[idx]
         self.item_list.clear()
         self.populate_list_box(text)
         self.populate_options(idx)
 
     def populate_options(self, idx):
+        """
+
+        Args:
+            idx:
+
+        Returns:
+
+        """
         pos = self.grid[idx]
         local_config = self.config[pos]
         keys = local_config.keys()
@@ -240,6 +274,14 @@ class EditConfigDialog(QtWidgets.QDialog):
             self.ylim_high.setEnabled(False)
 
     def populate_list_box(self, key):
+        """
+
+        Args:
+            key:
+
+        Returns:
+
+        """
         ignore_items = ['xlabel', 'ylabel', 'legend', 'xlim', 'ylim', 'color', 'noresample', 'xshare']
         pos_items = [x for x in self.config[key] if x not in ignore_items]
         pos_items.sort()
@@ -250,6 +292,14 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.item_list.setCurrentRow(0)
 
     def populate_signal_fields(self, idx):
+        """
+
+        Args:
+            idx:
+
+        Returns:
+
+        """
         if idx != 0:
             pos = self.combo.currentText()
             pos = self.grid[self.combo.currentIndex()]
@@ -284,6 +334,11 @@ class EditConfigDialog(QtWidgets.QDialog):
             self.color_input.setText("#D3D3D3")
 
     def handle_apply_event(self):
+        """
+
+        Returns:
+
+        """
         idx = self.item_list.currentRow()
         xtext = self.x_input.text()
         ytext = self.y_input.text()
@@ -340,6 +395,14 @@ class EditConfigDialog(QtWidgets.QDialog):
         self.populate_list_box(pos)
 
     def enable_xlimits(self, state):
+        """
+
+        Args:
+            state:
+
+        Returns:
+
+        """
         if state == QtCore.Qt.Checked:
             self.xlim_low.setEnabled(True)
             self.xlim_high.setEnabled(True)
@@ -348,6 +411,14 @@ class EditConfigDialog(QtWidgets.QDialog):
             self.xlim_high.setDisabled(True)
 
     def enable_ylimits(self, state):
+        """
+
+        Args:
+            state:
+
+        Returns:
+
+        """
         if state == QtCore.Qt.Checked:
             self.ylim_low.setEnabled(True)
             self.ylim_high.setEnabled(True)
@@ -356,6 +427,11 @@ class EditConfigDialog(QtWidgets.QDialog):
             self.ylim_high.setDisabled(True)
 
     def open_color_dialog(self):
+        """
+
+        Returns:
+
+        """
         dlg = QtWidgets.QColorDialog()
         for idx, color in enumerate(default_colors):
             dlg.setCustomColor(idx, QtGui.QColor(color))
