@@ -5,16 +5,16 @@ from copy import deepcopy
 
 class EditGlobalDialog(QtWidgets.QDialog):
     """
-
+    Dialog box for editing global settings (tree name and server name)
     """
 
     def __init__(self, config, xloc=None, yloc=None):
         """
 
         Args:
-            config:
-            xloc:
-            yloc:
+            config (dict): Input configuration
+            xloc (int): x location on screen to open dialog box
+            yloc (int): y location on screen to open dialog box
         """
         super(EditGlobalDialog, self).__init__()
         self.config = deepcopy(config)
@@ -44,13 +44,11 @@ class EditGlobalDialog(QtWidgets.QDialog):
 
     def init_UI(self, xloc, yloc):
         """
+        Initializes the user interface
 
         Args:
-            xloc:
-            yloc:
-
-        Returns:
-
+            xloc (int): x location to open the dialog box
+            yloc (int): y location to open the dialog box
         """
         if xloc is None:
             xloc = 200
@@ -78,16 +76,12 @@ class EditGlobalDialog(QtWidgets.QDialog):
 
     def update_server(self):
         """
-
-        Returns:
-
+        Updates self.server to the new user input
         """
         self.server = self.server_input.text()
 
     def update_tree(self):
         """
-
-        Returns:
-
+        Updates self.tree to the new user input
         """
         self.tree = self.tree_input.text()
