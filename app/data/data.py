@@ -1,5 +1,4 @@
 from __future__ import division, print_function
-import numpy as np
 
 
 class Data:
@@ -35,13 +34,10 @@ class Data:
     def __str__(self):
         return self.name
 
+    def __bool__(self):
+        if self._time is not None and self._data is not None:
+            return True
+        else:
+            return False
 
-if __name__ == "__main__":
-    a = np.linspace(0, 1, 11)
-    b = a**2
-    name = "test"
 
-    test = Data(name, a, b)
-
-    print(repr(test))
-    print(str(test))
