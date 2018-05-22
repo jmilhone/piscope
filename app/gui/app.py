@@ -15,6 +15,7 @@ from .edit_global import EditGlobalDialog
 from distutils.util import strtobool
 import logging
 import MDSplus as mds
+from ..logging.piscope_logging import log
 
 default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
                   '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
@@ -347,6 +348,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.save_action.setEnabled(True)
         self.save_as_action.setEnabled(True)
 
+    @log(logger)
     def load_configuration(self, filename):
         """
         Loads a configuration file named filename and replaces the old configuration stored in memory.
@@ -366,6 +368,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.update_subplot_config(col_setup)
         self.modify_shared_axes_list()
 
+    @log(logger)
     def update_subplot_config(self, col_setup):
         """
         Updates the subplot configuration based on the new column setup.
@@ -401,6 +404,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.vbox.addWidget(self.canvas, 12)
         self.vbox.addLayout(self.hbox)
 
+    @log(logger)
     @QtCore.pyqtSlot(int)
     def fetch_data(self, shot_number):
         """
@@ -449,7 +453,7 @@ class MyWindow(QtWidgets.QMainWindow):
             self.acquiring_data = False
             return
 
-        logger.debug("Asking if tree is available to be opened")
+        # logger.debug("Asking if tree is available to be opened")
         tree_available = mdsh.check_open_tree(shot_number, self.server, self.tree)
         print("is the tree available?", tree_available)
 
@@ -457,13 +461,13 @@ class MyWindow(QtWidgets.QMainWindow):
         if not tree_available:
             # print('passing None to handle mdsplus data')
             self.acquiring_data = False
-            self.handle_mdsplus_data(None)
             logger.warn("tree was unable to be opened. shot = %d" % shot_number)
+            self.handle_mdsplus_data(None)
             return
 
         # There is data to grab and the tree exists.
         # Now reloop over and start the workers
-        logger.debug("Asking for data")
+        # logger.debug("Asking for data")
         for k in keys:
             for name in node_locs[k]:
                 if name not in ignore_items:
@@ -472,6 +476,7 @@ class MyWindow(QtWidgets.QMainWindow):
                     worker.signals.result.connect(self.handle_returning_data)
                     self.threadpool.start(worker)
 
+    @log(logger)
     def handle_returning_data(self, data_tuple):
         """
         Adds returning MDSplus data to its location in the self.data dictionary
@@ -489,10 +494,11 @@ class MyWindow(QtWidgets.QMainWindow):
         # unpack data_tuple
         loc, name, data = data_tuple
         self.data[loc].append(data)
-        logger.debug("Retrieving data for %s" % name)
+        logger.debug("Receiving data for %s" % name)
         if self.completion == self.n_positions:
             self.handle_mdsplus_data(self.data)
 
+    @log(logger)
     def handle_mdsplus_data(self, data):
         """
         Plots data if there is data to be plotted.  Otherwise, plot is cleared and function is exited.
@@ -520,6 +526,7 @@ class MyWindow(QtWidgets.QMainWindow):
         if data is None:
             self.status.setText("Error opening Shot {0:d}".format(self.shot_number))
             logger.warn("No data for %d" % self.shot_number)
+
         elif mdsh.check_data_dictionary(self.data):
             self.down_samplers = data_plotter.plot_all_data(axs, self.node_locs, data,
                                                             downsampling=self.downsampling_points)
@@ -545,6 +552,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.canvas.draw()
         self.progess_bar.setValue(0.0)
 
+    @log(logger)
     def change_auto_update(self, state):
         """
         Toggles auto-update functionality with MDSplus events
@@ -571,7 +579,8 @@ class MyWindow(QtWidgets.QMainWindow):
                     self.mds_update_event = None
                     logger.debug("Auto update is now off.")
 
-    def change_sharex(self):
+    @log(logger)
+    def change_sharex(self, checked):
         """
         Toggles the share-x axis functionality of the subplots
 
@@ -591,7 +600,8 @@ class MyWindow(QtWidgets.QMainWindow):
             for ax in axs[1:]:
                 ax0.get_shared_x_axes().remove(ax)
 
-    def update_pressed(self):
+    @log(logger)
+    def update_pressed(self, checked):
         """
         Calls self.fetch_data if the shot_number in self.spinBox is different from self.shot_number or
         if self.data is None
@@ -603,7 +613,7 @@ class MyWindow(QtWidgets.QMainWindow):
             # No change, just replot
             self.handle_mdsplus_data(self.data)
         else:
-            print('im trying to fetch data')
+            # print('im trying to fetch data')
             self.shot_number = shot_number
             self.fetch_data(shot_number)
 
@@ -669,6 +679,7 @@ class MyWindow(QtWidgets.QMainWindow):
                 i, j = (int(x) for x in pos)
                 self.shared_axs.append(self.axs[j][i])
 
+    @log(logger)
     @QtCore.pyqtSlot(int)
     def handle_incoming_mds_event(self, shot_number):
         """

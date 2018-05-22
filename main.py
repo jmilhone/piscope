@@ -3,7 +3,9 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QIcon
 import argparse
 import app.gui.app as MyApp
-import logging
+#import logging
+from app.logging.piscope_logging import create_logger, log
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run a PiScope for the Big Red Ball.")
@@ -13,21 +15,25 @@ if __name__ == "__main__":
                         help="Log file name for debug logging")
     args = parser.parse_args()
 
-    logger = logging.getLogger('pi-scope-logger')
+
     if args.logging:
-        handler = logging.FileHandler(filename=args.logging, mode='w')
-        logger.setLevel(logging.DEBUG)
-
-        # create formatter
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-
-        # add formatter to ch
-        handler.setFormatter(formatter)
-
+        logger = create_logger(name='pi-scope-logger', filename=args.logging, useNull=False)
     else:
-        handler = logging.NullHandler()
+        logger = create_logger(name='pi-scope-logger', useNull=True)
 
-    logger.addHandler(handler)
+        # handler = logging.FileHandler(filename=args.logging, mode='w')
+        # logger.setLevel(logging.DEBUG)
+
+        # # create formatter
+        # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+
+        # # add formatter to ch
+        # handler.setFormatter(formatter)
+
+    # else:
+    #     handler = logging.NullHandler()
+
+    # logger.addHandler(handler)
     logger.debug("*****************************************")
     logger.debug("Starting up")
 
@@ -35,4 +41,3 @@ if __name__ == "__main__":
     myapp.setWindowIcon(QIcon("Icons/application-wave.png"))
     window = MyApp.MyWindow(args.config, args.shot_number)
     myapp.exec_()
-    handler.close()
