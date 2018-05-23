@@ -46,7 +46,6 @@ def log(logger):
         def wrapper(*args, **kwargs):
             logger.debug('Calling function %s' % func.__name__)
             try:
-                print(*args)
                 return func(*args, **kwargs)
             except:
                 logger.exception('Error in %s' % func.__name__)

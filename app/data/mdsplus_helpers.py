@@ -57,8 +57,8 @@ def retrieve_signal(shot_number, signal_info, loc_name, signal_name, server, tre
         data = retrieve_data(con, signal_info, signal_name)
     except (mds.MdsIpException, mds.TreeFOPENR, mds.TdiMISS_ARG) as e:
         logger.warn('Random MDSplus error in retrieve_signal')
-        print("Error with shot {0:d}, loc {1}, name {2}".format(shot_number, loc_name, signal_name))
-        print(e.message)
+        # print("Error with shot {0:d}, loc {1}, name {2}".format(shot_number, loc_name, signal_name))
+        # print(e.message)
         data = None
     return loc_name, signal_name, data
 

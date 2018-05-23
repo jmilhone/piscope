@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 
 def plot_all_data(axs, locs, data, downsampling=10000):
-    print('entered plot all data')
+    # print('entered plot all data')
     down_samplers = []
     for idx, pos in enumerate(locs):
         i, j = (int(x) for x in pos)
@@ -50,7 +50,7 @@ def plot(ax, info_dict, data, downsampling=10000):
             line, = ax.plot(x, y, label=d.name, color=d.color, lw=1)
             down_sampler.lines.append(line)
         else:
-            print(d.name, "not resampling!")
+            # print(d.name, "not resampling!")
             x, y = d.time, d.data
             line, = ax.plot(x, y, label=d.name, color=d.color, lw=1)
 

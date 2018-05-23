@@ -120,6 +120,7 @@ class MyWindow(QtWidgets.QMainWindow):
             if self.shot_number is not None:
                 self.spinBox.setValue(self.shot_number)
                 self.shot_number_label.setText("Shot Number: {0:d}".format(self.shot_number))
+                self.updateBtn.setEnabled(False)
                 self.fetch_data(self.shot_number)
             else:
                 # The only way this can happen is the user didn't enter a shot and we
@@ -450,7 +451,7 @@ class MyWindow(QtWidgets.QMainWindow):
             for name in node_locs[k]:
                 if name not in ignore_items:
                     self.n_positions += 1
-        print(self.n_positions)
+        # print(self.n_positions)
 
         # No data, turn acquring_data off, go back to event loop
         if self.n_positions == 0:
@@ -460,7 +461,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
         # logger.debug("Asking if tree is available to be opened")
         tree_available = mdsh.check_open_tree(shot_number, self.server, self.tree)
-        print("is the tree available?", tree_available)
+        # print("is the tree available?", tree_available)
 
         # Can't open tree, set acquiring_data to false, call handle_mdplus_data(None)
         if not tree_available:
