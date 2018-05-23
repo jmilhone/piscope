@@ -216,7 +216,8 @@ class MyWindow(QtWidgets.QMainWindow):
         self.centralWidget.setLayout(self.vbox)
         self.setCentralWidget(self.centralWidget)
 
-    def new_configuration(self):
+    @log(logger)
+    def new_configuration(self, checked):
         """
         Opens a NewConfigDialog instance / dialog box to create a new configuration.
 
@@ -252,7 +253,8 @@ class MyWindow(QtWidgets.QMainWindow):
                 self.spinBox.setValue(self.shot_number)
             self.fetch_data(self.shot_number)
 
-    def open_edit_configuration_dialog(self):
+    @log(logger)
+    def open_edit_configuration_dialog(self, checked):
         """
         Opens a EditConfigDialog dialog box where the user can add and edit signals for the current subplots.
 
@@ -275,7 +277,8 @@ class MyWindow(QtWidgets.QMainWindow):
                 self.modify_shared_axes_list()
             self.fetch_data(self.shot_number)
 
-    def open_edit_global_settings(self):
+    @log(logger)
+    def open_edit_global_settings(self, checked):
         """
         Opens a EditGlobalDialog dialog box where the user can edit the server and tree names.
         """
@@ -300,7 +303,8 @@ class MyWindow(QtWidgets.QMainWindow):
         yloc = rect.y() + 0.1 * rect.height()
         return xloc, yloc
 
-    def open_config_dialog(self):
+    @log(logger)
+    def open_config_dialog(self, checked):
         """
         Opens a QFileDialog dialog box for picking a configuration file to open.
 
@@ -337,6 +341,7 @@ class MyWindow(QtWidgets.QMainWindow):
             self.autoUpdate_action.setChecked(update_state)
             self.change_auto_update(update_state)
 
+    @log(logger)
     def enable_actions_after_config(self):
         """
         Enables a bunch of GUI actions and buttons that are not active when a config file is not loaded.
@@ -617,7 +622,8 @@ class MyWindow(QtWidgets.QMainWindow):
             self.shot_number = shot_number
             self.fetch_data(shot_number)
 
-    def save_as_configuration(self):
+    @log(logger)
+    def save_as_configuration(self, checked):
         """
         Opens as Save As dialog box.
 
@@ -629,7 +635,8 @@ class MyWindow(QtWidgets.QMainWindow):
         self.save_as_dialog.setNameFilter("Config Files (*.ini *.txt)")
         self.save_as_dialog.exec_()
 
-    def save_configuration(self):
+    @log(logger)
+    def save_configuration(self, checked):
         """
         If there is a config filename, the config is saved.  Else, a Save As dialog is opened.
         """
@@ -651,7 +658,8 @@ class MyWindow(QtWidgets.QMainWindow):
         config_obj.update(self.config)
         config_obj.write()
 
-    def open_change_downsample(self):
+    @log(logger)
+    def open_change_downsample(self, checked):
         """
         Opens a EditDownSampleDialog dialog box
 
@@ -667,6 +675,7 @@ class MyWindow(QtWidgets.QMainWindow):
             else:
                 self.fetch_data(self.shot_number)
 
+    @log(logger)
     def modify_shared_axes_list(self):
         """
         Updates the list of shared x-axes (self.shared_axs)
@@ -697,3 +706,4 @@ class MyWindow(QtWidgets.QMainWindow):
         self.mds_update_event = MyEvent(self.event_name)
         self.mds_update_event.sender.emitter.connect(self.handle_incoming_mds_event)
         self.fetch_data(shot_number)
+

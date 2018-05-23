@@ -61,7 +61,7 @@ def time_log(logger):
         @wraps(func)
         def wrapper(*args, **kwargs):
             try:
-                t0 =  time.time()
+                t0 = time.time()
                 res = func(*args, **kwargs)
                 t1 = time.time()
                 logger.debug('Calling function %s, completed in %f seconds' % (func.__name__, t1-t0))

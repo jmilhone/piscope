@@ -14,11 +14,14 @@ def get_current_shot(server, tree):
         current_shot = int(con.get("$SHOT"))
         return current_shot
     except mds.mdsExceptions.TreeNOCURRENT as e:
-        return None
+        logger.warn('TreeNOCURRENT in get_current_shot')
+        return
     except (mds.MdsIpException, mds.TreeFOPENR, mds.TdiMISS_ARG) as e:
-        return None
+        logger.warn('Random MDSplus error in get_current_shot')
+        return
     except ValueError as e:
-        return None
+        logger.warn('ValueError in get_current_shot')
+        return
 
 
 @log(logger)
@@ -53,6 +56,7 @@ def retrieve_signal(shot_number, signal_info, loc_name, signal_name, server, tre
         logger.debug("Retrieving data for %s" % signal_name)
         data = retrieve_data(con, signal_info, signal_name)
     except (mds.MdsIpException, mds.TreeFOPENR, mds.TdiMISS_ARG) as e:
+        logger.warn('Random MDSplus error in retrieve_signal')
         print("Error with shot {0:d}, loc {1}, name {2}".format(shot_number, loc_name, signal_name))
         print(e.message)
         data = None
@@ -87,10 +91,13 @@ def retrieve_data(connection, node_loc, name):
         return Data(name, t, data, node_loc['color'])
 
     except mds.MdsIpException:
-        return None
+        logger.warn('MdsIPException occurred in retrieve_data for %s' % name)
+        return
     except mds.TreeNODATA as e:
-        return None
+        logger.warn('TreeNODATA occurred in retrieve_data for %s' % name)
+        return
     except KeyError:
-        return None
+        logger.warn('KeyError occured in retrieve_data for %s' % name)
+        return
 
 
