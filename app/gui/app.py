@@ -556,6 +556,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.toolbar.push_current()
         self.canvas.draw()
         self.progess_bar.setValue(0.0)
+        self.updateBtn.setEnabled(True)
 
     @log(logger)
     def change_auto_update(self, state):
@@ -620,6 +621,7 @@ class MyWindow(QtWidgets.QMainWindow):
         else:
             # print('im trying to fetch data')
             self.shot_number = shot_number
+            self.updateBtn.setEnabled(False)
             self.fetch_data(shot_number)
 
     @log(logger)
@@ -705,5 +707,6 @@ class MyWindow(QtWidgets.QMainWindow):
             logger.error("STUPID MDSPLUS CANCEL ERROR in handle_incoming_mds_event, %s" % e.message)
         self.mds_update_event = MyEvent(self.event_name)
         self.mds_update_event.sender.emitter.connect(self.handle_incoming_mds_event)
+        self.updateBtn.setEnabled(False)
         self.fetch_data(shot_number)
 
