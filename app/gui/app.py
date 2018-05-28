@@ -38,10 +38,10 @@ class MyWindow(QtWidgets.QMainWindow):
             shot_number (int, optional): shot number to open
 
         Attributes:
-             config (dict): Configuration containing information for data retrieval and plotting
-             server (str): MDSplus server to retrieve data from
-             tree (str): MDSplus tree name, default is wipal
-             event_name (str): MDSplus event name to catch for auto-update.  Note this only works if you are on the same
+             self.config (dict): Configuration containing information for data retrieval and plotting
+             self.server (str): MDSplus server to retrieve data from
+             self.tree (str): MDSplus tree name, default is wipal
+             self.event_name (str): MDSplus event name to catch for auto-update.  Note this only works if you are on the same
                 subnet as your MDSplus server
         """
         super(MyWindow, self).__init__()
@@ -59,6 +59,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.downsampling_points = 10000
         self.node_locs = None
         self.data = None
+        self.gs = None
 
         # for the progress bar
         self.n_positions = 0.0
@@ -187,7 +188,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.spinBox.setRange(0, 999999)
         self.spinBox.setKeyboardTracking(False)
 
-        self.progess_bar.setValue(0.0)
+        self.progess_bar.setValue(0)
 
         # Take care of fonts here
         self.font.setPointSize(18)
@@ -245,7 +246,7 @@ class MyWindow(QtWidgets.QMainWindow):
             self.event_name = dlg.event
 
             self.enable_actions_after_config()
-            #self.node_locs = self.get_data_locs()
+            # self.node_locs = self.get_data_locs()
             self.node_locs = parser.get_data_locs(self.config)
             self.update_subplot_config(dlg.column_setup)
 
@@ -270,10 +271,10 @@ class MyWindow(QtWidgets.QMainWindow):
             sharex = self.shareX_action.isChecked()
             if sharex:
                 self.shareX_action.setChecked(False)
-                self.change_sharex()
+                self.change_sharex(False)
                 self.modify_shared_axes_list()
                 self.shareX_action.setChecked(True)
-                self.change_sharex()
+                self.change_sharex(False)
             else:
                 self.modify_shared_axes_list()
             self.fetch_data(self.shot_number)
@@ -315,7 +316,7 @@ class MyWindow(QtWidgets.QMainWindow):
         dlg.setFileMode(QtWidgets.QFileDialog.AnyFile)
         dlg.setNameFilters(["Config Files (*.ini)", "Text files (*.txt)"])
         dlg.selectNameFilter("Config Files (*.ini)")
-        files = list()
+        # files = list()
 
         if dlg.exec_():
             filenames = dlg.selectedFiles()
@@ -327,7 +328,7 @@ class MyWindow(QtWidgets.QMainWindow):
             self.config_filename = filenames[0]
             self.load_configuration(filenames[0])
             self.data = None
-            self.change_sharex()
+            self.change_sharex(False)
 
             if self.shot_number is None:
                 self.shot_number = mdsh.get_current_shot(self.server, self.tree)
@@ -388,6 +389,7 @@ class MyWindow(QtWidgets.QMainWindow):
             self.vbox.removeWidget(self.toolbar)
             self.vbox.removeWidget(self.canvas)
             self.figure.clear()
+            self.canvas.destroy(True)
             self.figure = None
             self.toolbar = None
             self.canvas = None
@@ -401,7 +403,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
         cols = [x for x in col_setup if x > 0]
 
-        self.figure, self.axs = data_plotter.create_figure(cols)
+        self.figure, self.axs, self.gs = data_plotter.create_figure(cols)
         self.canvas = FigureCanvas(self.figure)
         self.toolbar = NavigationToolbar(self.canvas, self)
 
@@ -467,7 +469,7 @@ class MyWindow(QtWidgets.QMainWindow):
         if not tree_available:
             # print('passing None to handle mdsplus data')
             self.acquiring_data = False
-            logger.warn("tree was unable to be opened. shot = %d" % shot_number)
+            logger.warning("tree was unable to be opened. shot = %d" % shot_number)
             self.handle_mdsplus_data(None)
             return
 
@@ -531,7 +533,7 @@ class MyWindow(QtWidgets.QMainWindow):
         # Check if data was actually passed to this function.  Plot if it is.
         if data is None:
             self.status.setText("Error opening Shot {0:d}".format(self.shot_number))
-            logger.warn("No data for %d" % self.shot_number)
+            logger.warning("No data for %d" % self.shot_number)
 
         elif mdsh.check_data_dictionary(self.data):
             self.down_samplers = data_plotter.plot_all_data(axs, self.node_locs, data,
@@ -552,12 +554,14 @@ class MyWindow(QtWidgets.QMainWindow):
 
         # Redraw GUI elements
         self.spinBox.setValue(self.shot_number)
-        self.figure.tight_layout()
+        #self.figure.tight_layout()
+        self.gs.tight_layout(self.figure)
         self.toolbar.update()
         self.toolbar.push_current()
         self.canvas.draw()
         self.progess_bar.setValue(0.0)
         self.updateBtn.setEnabled(True)
+        print(mdsh._retrieve_signal.cache_info())
 
     @log(logger)
     def change_auto_update(self, state):

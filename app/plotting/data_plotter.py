@@ -4,7 +4,7 @@ from .resample import DataDisplayDownsampler
 import numpy as np
 from ..gui.helpers import global_lcm
 import matplotlib.pyplot as plt
-
+from matplotlib.gridspec import GridSpec
 
 def plot_all_data(axs, locs, data, downsampling=10000):
     # print('entered plot all data')
@@ -86,17 +86,22 @@ def plot(ax, info_dict, data, downsampling=10000):
 
 def create_figure(column_setup):
     figure = plt.figure(0)
+
     axs = []
     cols = [x for x in column_setup if x > 0]
     lcm = global_lcm(cols)
     ncols = len(cols)
+    gs = GridSpec(lcm, ncols)
+    # gs.update(wspace=0.15, hspace=0.15)
     for idx, item in enumerate(cols):
         factor = lcm // item
         axes = []
         for j in range(item):
-            ax = plt.subplot2grid((lcm, ncols), (factor * j, idx), rowspan=factor)
+            print(lcm, ncols, factor*j, idx, factor)
+            # ax = plt.subplot2grid((lcm, ncols), (factor * j, idx), rowspan=factor, fig=figure)
+            ax = figure.add_subplot(gs[factor*j:factor*(j+1), idx])
             axes.append(ax)
         axs.append(axes)
-
-    return figure, axs
+    # gs.tight_layout(figure)
+    return figure, axs, gs
 
