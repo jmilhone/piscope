@@ -18,7 +18,7 @@ def create_logger(name='pi-scope-logger', filename='piscope-debug.log', useNull=
     logger = logging.getLogger(name)
 
     if useNull:
-        handler = logging.NullHandler
+        handler = logging.NullHandler()
     else:
         handler = logging.FileHandler(filename=filename, mode='w')
         logger.setLevel(logging.DEBUG)
