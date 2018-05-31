@@ -1,11 +1,11 @@
 from __future__ import division, print_function
-import collections
+from collections.abc import Iterable
 
 
 class Data:
     def __init__(self, name, time, data, color):
-        self._time = time
-        self._data = data
+        self._time = Data.iterable_validator(time, 'time')
+        self._data = Data.iterable_validator(data, 'data')
         self.name = name
         self.color = color
 
@@ -15,7 +15,7 @@ class Data:
 
     @time.setter
     def time(self, val):
-        if isinstance(val, collections.Iterable):
+        if isinstance(val, Iterable):
             self._time = val
         else:
             raise ValueError('Time value must be an iterable')
@@ -26,7 +26,7 @@ class Data:
 
     @data.setter
     def data(self, val):
-        if isinstance(val, collections.Iterable):
+        if isinstance(val, Iterable):
             self._data = val
         else:
             raise ValueError('Data value must be an iterable')
@@ -42,8 +42,8 @@ class Data:
         return self.name
 
     def __bool__(self):
-        time_flag = isinstance(self._time, collections.Iterable) and len(self._time) > 1
-        data_flag = isinstance(self._data, collections.Iterable) and len(self._data) > 1
+        time_flag = isinstance(self._time, Iterable) and len(self._time) > 1
+        data_flag = isinstance(self._data, Iterable) and len(self._data) > 1
 
         if time_flag and data_flag:
             return True
@@ -85,3 +85,8 @@ class Data:
 
         return False
 
+    @staticmethod
+    def iterable_validator(val, name):
+        if isinstance(val, Iterable):
+            return val
+        raise ValueError(f'{name} is not iterable')
