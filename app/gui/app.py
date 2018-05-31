@@ -554,8 +554,8 @@ class MyWindow(QtWidgets.QMainWindow):
 
         # Redraw GUI elements
         self.spinBox.setValue(self.shot_number)
-        #self.figure.tight_layout()
-        self.gs.tight_layout(self.figure)
+        self.figure.tight_layout()
+        #self.gs.tight_layout(self.figure)
         self.toolbar.update()
         self.toolbar.push_current()
         self.canvas.draw()
