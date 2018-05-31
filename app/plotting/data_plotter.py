@@ -97,7 +97,7 @@ def create_figure(column_setup):
         factor = lcm // item
         axes = []
         for j in range(item):
-            print(lcm, ncols, factor*j, idx, factor)
+            # print(lcm, ncols, factor*j, idx, factor)
             # ax = plt.subplot2grid((lcm, ncols), (factor * j, idx), rowspan=factor, fig=figure)
             ax = figure.add_subplot(gs[factor*j:factor*(j+1), idx])
             axes.append(ax)
