@@ -26,7 +26,7 @@ def plot(ax, info_dict, data, downsampling=10000):
     xend = -np.inf
     for d in data:
         #if len(d.data) > 1:
-        if d is not None:
+        if d:  # Data class is now Truthy
             actual_data += [d]
 
             # prep xstart and xend
