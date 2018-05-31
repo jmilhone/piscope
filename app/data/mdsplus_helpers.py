@@ -7,6 +7,7 @@ from functools import lru_cache
 
 logger = logging.getLogger('pi-scope-logger')
 
+
 @log(logger)
 def get_current_shot(server, tree):
     try:
@@ -30,7 +31,7 @@ def check_data_dictionary(data_dict):
     for d in data_dict:
         # data_dict[d] is a list
         for item in data_dict[d]:
-            if item is not None:
+            if item:  # Class Data is now Truthy
                 return True
     # If you make it to here, that means all items were None
     return False
@@ -44,25 +45,7 @@ def check_open_tree(shot_number, server, tree):
         return True
     except (mds.MdsIpException, mds.TreeFOPENR, mds.TdiMISS_ARG) as e:
         logger.warning('Error opening shot %d' % shot_number)
-        # print("Error with shot {0:d}".format(shot_number))
-        # print(e.message)
         return False
-
-
-# @log(logger)
-# def retrieve_signal(shot_number, signal_info, loc_name, signal_name, server, tree):
-
-    # try:
-    #     con = mds.Connection(server)
-    #     con.openTree(tree, shot_number)
-    #     logger.debug("Retrieving data for %s" % signal_name)
-    #     data = retrieve_data(con, signal_info, signal_name)
-    # except (mds.MdsIpException, mds.TreeFOPENR, mds.TdiMISS_ARG) as e:
-    #     logger.warn('Random MDSplus error in retrieve_signal')
-    #     # print("Error with shot {0:d}, loc {1}, name {2}".format(shot_number, loc_name, signal_name))
-    #     # print(e.message)
-    #     data = None
-    # return loc_name, signal_name, data
 
 
 @log(logger)
@@ -72,21 +55,9 @@ def retrieve_signal(shot_number, signal_info, loc_name, signal_name, server, tre
     color = signal_info['color']
 
     data = _retrieve_signal(shot_number, server, tree, xstring, ystring,
-                           signal_name, color)
+                            signal_name, color)
 
     return loc_name, signal_name, data
-
-    # try:
-    #     con = mds.Connection(server)
-    #     con.openTree(tree, shot_number)
-    #     logger.debug("Retrieving data for %s" % signal_name)
-    #     data = retrieve_data(con, signal_info, signal_name)
-    # except (mds.MdsIpException, mds.TreeFOPENR, mds.TdiMISS_ARG) as e:
-    #     logger.warn('Random MDSplus error in retrieve_signal')
-    #     # print("Error with shot {0:d}, loc {1}, name {2}".format(shot_number, loc_name, signal_name))
-    #     # print(e.message)
-    #     data = None
-    # return loc_name, signal_name, data
 
 
 @lru_cache(maxsize=512)
@@ -101,6 +72,10 @@ def _retrieve_signal(shot_number, server, tree, xstring, ystring, name, color):
     except (mds.MdsIpException, mds.TreeFOPENR, mds.TdiMISS_ARG) as e:
         logger.warning('Random MDSplus error in retrieve_signal')
         return
+
+
+def empty_lru_cache():
+    _retrieve_signal.cache_clear()
 
 
 @time_log(logger)
@@ -139,43 +114,3 @@ def retrieve_data(connection, xstr, ystr, name, color):
     except KeyError:
         logger.warning('KeyError occured in retrieve_data for %s' % name)
         return
-
-# @time_log(logger)
-# def retrieve_data(connection, node_loc, name):
-#     try:
-#         if "\n" in node_loc['y']:
-#             ystring = node_loc['y'].splitlines()
-#             ystring = " ".join(ystring)
-#         else:
-#             ystring = node_loc['y']
-
-        # if "\n" in node_loc['x']:
-        #     xstring = node_loc['x'].splitlines()
-        #     xstring = " ".join(xstring)
-
-        #     xstring = node_loc['x']
-
-        # data = connection.get(ystring)
-        # t = connection.get(xstring)
-
-        # # apparently you can get None without any errors
-        # if data is None or t is None:
-        #     return None
-
-        # data = data.data()
-        # t = t.data()
-
-        # return Data(name, t, data, node_loc['color'])
-
-    # except mds.MdsIpException:
-    #     logger.warn('MdsIPException occurred in retrieve_data for %s' % name)
-    #     return
-    # except mds.TreeNODATA as e:
-    #     logger.warn('TreeNODATA occurred in retrieve_data for %s' % name)
-    #     return
-    # except KeyError:
-    #     logger.warn('KeyError occured in retrieve_data for %s' % name)
-    #     return
-
-
-
