@@ -84,6 +84,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.change_downsample = QtWidgets.QAction("Edit Downsampling", self)
         self.edit_global_action = QtWidgets.QAction(QtGui.QIcon("Icons/gear--pencil.png"),
                                                     "Edit Global Settings...", self)
+        self.empty_cache_action = QtWidgets.QAction("Empty Cache", self)
 
         self.centralWidget = QtWidgets.QWidget()
         self.spinBox = QtWidgets.QSpinBox(self)
@@ -153,6 +154,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.exit_action.triggered.connect(self.close)
         self.edit_global_action.triggered.connect(self.open_edit_global_settings)
         self.open_config_action.triggered.connect(self.open_config_dialog)
+        self.empty_cache_action.triggered.connect(self.empty_data_cache)
         self.show()
 
     def check_alive(self):
@@ -182,6 +184,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.option_menu.addAction(self.autoUpdate_action)
         self.option_menu.addAction(self.shareX_action)
         self.option_menu.addAction(self.change_downsample)
+        self.option_menu.addAction(self.empty_cache_action)
 
         self.autoUpdate_action.setCheckable(True)
         self.shareX_action.setCheckable(True)
@@ -561,7 +564,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.canvas.draw()
         self.progess_bar.setValue(0.0)
         self.updateBtn.setEnabled(True)
-        print(mdsh._retrieve_signal.cache_info())
+        mdsh.log_lru_cache()
 
     @log(logger)
     def change_auto_update(self, state):
@@ -715,3 +718,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.updateBtn.setEnabled(False)
         self.fetch_data(shot_number)
 
+    @log(logger)
+    def empty_data_cache(self, checked):
+        mdsh.empty_lru_cache()

@@ -75,7 +75,21 @@ def _retrieve_signal(shot_number, server, tree, xstring, ystring, name, color):
 
 
 def empty_lru_cache():
+    size_before_empty = _retrieve_signal.cache_info().currsize
     _retrieve_signal.cache_clear()
+    logger.debug("Cache had %d items before clearing" % size_before_empty)
+
+
+def log_lru_cache():
+    cache_info = _retrieve_signal.cache_info()
+    hits = cache_info.hits
+    misses = cache_info.misses
+    maxsize = cache_info.maxsize
+    currsize = cache_info.currsize
+
+    logger.debug(
+        "Cache has %d hits, %d misses with %d items out of the maximum %d items" % (hits, misses, currsize, maxsize)
+    )
 
 
 @time_log(logger)
