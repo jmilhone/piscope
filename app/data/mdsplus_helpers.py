@@ -4,8 +4,38 @@ from .data import Data
 from ..logging.piscope_logging import log, time_log
 import logging
 from functools import lru_cache
+import concurrent.futures
 
 logger = logging.getLogger('pi-scope-logger')
+
+ignore_items = ['legend', 'xlabel', 'ylabel', 'xlim', 'ylim', 'color', 'noresample', 'xshare']
+
+
+def retrieve_all_data(server, tree, shot_number, config, progress_signal=None):
+    signals_to_grab = []
+    data = dict()
+
+    # Prep the data dictionary with Nones and grab all of the names of signals
+    for subplot_name, subplot in config.items():
+        data[subplot_name] = list()
+        for signal_name in subplot:
+            if signal_name not in ignore_items:
+                signals_to_grab.append((subplot_name, signal_name))
+
+    n_items = len(signals_to_grab)
+    n = 0
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+        future_to_signal = {executor.submit(retrieve_signal, shot_number, config[x][y], x, y, server, tree): (x, y)
+                            for (x, y) in signals_to_grab}
+
+        for future in concurrent.futures.as_completed(future_to_signal):
+            subplot, name = future_to_signal[future]
+            data[subplot].append(future.result())
+            n += 1
+            if progress_signal:
+                progress_signal.emit(int(n / n_items * 100.0))
+
+    return data
 
 
 @log(logger)
@@ -56,8 +86,8 @@ def retrieve_signal(shot_number, signal_info, loc_name, signal_name, server, tre
 
     data = _retrieve_signal(shot_number, server, tree, xstring, ystring,
                             signal_name, color)
-
-    return loc_name, signal_name, data
+    return data
+    # return loc_name, signal_name, data
 
 
 @lru_cache(maxsize=512)

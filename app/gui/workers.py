@@ -55,7 +55,7 @@ class Worker(QtCore.QRunnable):
 
         # Retrieve args/kwargs here; and fire processing using them
         try:
-            result = self.fn(*self.args, **self.kwargs)
+            result = self.fn(*self.args, **self.kwargs, progress_signal=self.signals.progress)
         except:
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]

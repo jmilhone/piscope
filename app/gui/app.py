@@ -16,6 +16,9 @@ from distutils.util import strtobool
 import logging
 import MDSplus as mds
 from ..logging.piscope_logging import log
+import concurrent.futures
+import time
+from random import randint
 
 default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
                   '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
@@ -434,6 +437,10 @@ class MyWindow(QtWidgets.QMainWindow):
         Args:
             shot_number (int): Shot number to fetch data from
         """
+        # worker = Worker(MyWindow.grab_data_testing)
+        # self.threadpool.start(worker)
+        # self.handle_mdsplus_data(None)
+
         if self.acquiring_data:
             # already grabbing data, do nothing
             print('already acquiring')
@@ -476,38 +483,47 @@ class MyWindow(QtWidgets.QMainWindow):
             self.handle_mdsplus_data(None)
             return
 
-        # There is data to grab and the tree exists.
-        # Now reloop over and start the workers
-        # logger.debug("Asking for data")
-        for k in keys:
-            for name in node_locs[k]:
-                if name not in ignore_items:
-                    worker = Worker(mdsh.retrieve_signal, shot_number, node_locs[k][name], k, name,
-                                    self.server, self.tree)
-                    worker.signals.result.connect(self.handle_returning_data)
-                    self.threadpool.start(worker)
+        # Trying to grab data using futures
+        worker = Worker(mdsh.retrieve_all_data, self.server, self.tree, shot_number, node_locs)
+        worker.signals.result.connect(self.handle_mdsplus_data)
+        worker.signals.progress.connect(self.update_progress_bar)
+        self.threadpool.start(worker)
 
-    @log(logger)
-    def handle_returning_data(self, data_tuple):
-        """
-        Adds returning MDSplus data to its location in the self.data dictionary
+        # # There is data to grab and the tree exists.
+        # # Now reloop over and start the workers
+        # # logger.debug("Asking for data")
+        # for k in keys:
+        #     for name in node_locs[k]:
+        #         if name not in ignore_items:
+        #             worker = Worker(mdsh.retrieve_signal, shot_number, node_locs[k][name], k, name,
+        #                             self.server, self.tree)
+        #             worker.signals.result.connect(self.handle_returning_data)
+        #             self.threadpool.start(worker)
 
-        This function is connected to the output of the Workers called in fetch_data.  self.completion is
-        counting the number of times this function is called.  If it self.completion equals self.n_positions, all of the
-        data has arrived and self.handle_mdsplus_data can be called.
+    def update_progress_bar(self, value):
+        self.progess_bar.setValue(value)
 
-        Args:
-            data_tuple (str, str, data.Data): (location of data in dictionary, name of signal, instance of data.Data)
-        """
-        self.completion += 1
+    # @log(logger)
+    # def handle_returning_data(self, data_tuple):
+    #     """
+    #     Adds returning MDSplus data to its location in the self.data dictionary
 
-        self.progess_bar.setValue(self.completion / self.n_positions * 100.0)
-        # unpack data_tuple
-        loc, name, data = data_tuple
-        self.data[loc].append(data)
-        logger.debug("Receiving data for %s" % name)
-        if self.completion == self.n_positions:
-            self.handle_mdsplus_data(self.data)
+        # This function is connected to the output of the Workers called in fetch_data.  self.completion is
+        # counting the number of times this function is called.  If it self.completion equals self.n_positions, all of the
+        # data has arrived and self.handle_mdsplus_data can be called.
+
+        # Args:
+        #     data_tuple (str, str, data.Data): (location of data in dictionary, name of signal, instance of data.Data)
+        # """
+        # self.completion += 1
+
+        # self.progess_bar.setValue(self.completion / self.n_positions * 100.0)
+        # # unpack data_tuple
+        # loc, name, data = data_tuple
+        # self.data[loc].append(data)
+        # logger.debug("Receiving data for %s" % name)
+        # if self.completion == self.n_positions:
+        #     self.handle_mdsplus_data(self.data)
 
     @log(logger)
     def handle_mdsplus_data(self, data):
@@ -721,3 +737,21 @@ class MyWindow(QtWidgets.QMainWindow):
     @log(logger)
     def empty_data_cache(self, checked):
         mdsh.empty_lru_cache()
+
+    @staticmethod
+    def grab_data_testing():
+        names = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            future_to_name = {executor.submit(MyWindow.test_function, name): name for name in names}
+            for future in concurrent.futures.as_completed(future_to_name):
+                name = future_to_name[future]
+                try:
+                    data = future.result()
+                    print(name, data)
+                except Exception as exc:
+                    print(name, exc)
+
+    @staticmethod
+    def test_function(name):
+        time.sleep(randint(1, 3))
+        return name
