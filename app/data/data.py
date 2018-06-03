@@ -1,11 +1,12 @@
 from __future__ import division, print_function
-from collections.abc import Iterable
+import numpy as np
 
 
 class Data:
+
     def __init__(self, name, time, data, color):
-        self._time = Data.iterable_validator(time, 'time')
-        self._data = Data.iterable_validator(data, 'data')
+        self._time = np.array(time)
+        self._data = np.array(data)
         self.name = name
         self.color = color
 
@@ -15,10 +16,7 @@ class Data:
 
     @time.setter
     def time(self, val):
-        if isinstance(val, Iterable):
-            self._time = val
-        else:
-            raise ValueError('Time value must be an iterable')
+        self._time = np.array(val)
 
     @property
     def data(self):
@@ -26,10 +24,7 @@ class Data:
 
     @data.setter
     def data(self, val):
-        if isinstance(val, Iterable):
-            self._data = val
-        else:
-            raise ValueError('Data value must be an iterable')
+        self._data = np.array(val)
 
     def __repr__(self):
         if self._time is None or self._data is None:
@@ -42,18 +37,11 @@ class Data:
         return self.name
 
     def __bool__(self):
-        time_flag = isinstance(self._time, Iterable) and len(self._time) > 1
-        data_flag = isinstance(self._data, Iterable) and len(self._data) > 1
-
-        if time_flag and data_flag:
+        if len(self) > 1:
+            # Note that a ValueError will be raised if the lengths don't match
             return True
 
         return False
-
-        # if self._time is not None and self._data is not None:
-        #     return True
-        # else:
-        #     return False
 
     def __len__(self):
         time_length = len(self._time)
@@ -77,16 +65,11 @@ class Data:
         if len1 != len2:
             return False
 
-        time_flag = all(x == y for x,y in zip(self._time, other.time))
-        data_flag = all(x == y for x,y in zip(self._data, other.data))
+        time_flag = all(x == y for x, y in zip(self._time, other.time))
+        data_flag = all(x == y for x, y in zip(self._data, other.data))
 
         if time_flag and data_flag:
             return True
 
         return False
 
-    @staticmethod
-    def iterable_validator(val, name):
-        if isinstance(val, Iterable):
-            return val
-        raise ValueError(f'{name} is not iterable')
