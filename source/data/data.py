@@ -25,7 +25,6 @@ class Data:
 
     Attributes:
         name (str): Name of the signal
-
         color (str): Color of signal when plotted
     """
 

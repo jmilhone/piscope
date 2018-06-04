@@ -34,11 +34,8 @@ class PiScope(QtWidgets.QMainWindow):
 
     Attributes:
         config (dict): Configuration containing information for data retrieval and plotting.
-
         server (str): MDSplus server to retrieve data from.
-
         tree (str): MDSplus tree name, default is wipal.
-
         event_name (str): MDSplus event name to catch for auto-update.
 
     Note: Auto-updating will only work if you are on the same subnet as your MDSplus server
