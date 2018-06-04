@@ -17,6 +17,10 @@ import logging
 import MDSplus as mds
 from ..logging.piscope_logging import log
 
+"""
+This module contains the :class:`PiScope`.  It is the main GUI element
+for the WiPPL PiScope app.
+"""
 
 default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
                   '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
@@ -28,22 +32,28 @@ logger = logging.getLogger('pi-scope-logger')
 class PiScope(QtWidgets.QMainWindow):
     """The PiScope Main Window
 
+    Attributes:
+        config (dict): Configuration containing information for data retrieval and plotting.
+
+        server (str): MDSplus server to retrieve data from.
+
+        tree (str): MDSplus tree name, default is wipal.
+
+        event_name (str): MDSplus event name to catch for auto-update.
+
     Note: Auto-updating will only work if you are on the same subnet as your MDSplus server
+
     """
 
     def __init__(self, config_file=None, shot_number=None):
         """
+        Creates an instance of a PiScope Window.  Does not require any inputs.
 
         Args:
             config_file (str, optional): filepath to a config file (*.ini)
             shot_number (int, optional): shot number to open
 
-        Attributes:
-             self.config (dict): Configuration containing information for data retrieval and plotting
-             self.server (str): MDSplus server to retrieve data from
-             self.tree (str): MDSplus tree name, default is wipal
-             self.event_name (str): MDSplus event name to catch for auto-update.  Note this only works if you are on the same
-                subnet as your MDSplus server
+
         """
         super(PiScope, self).__init__()
         self.setWindowTitle("Big Red Ball PiScope")

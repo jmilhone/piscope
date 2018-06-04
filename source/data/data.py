@@ -1,10 +1,42 @@
 from __future__ import division, print_function
 import numpy as np
+"""
+Module Data
+==============
+Defines one class, Data.
+You define Data by providing a name, time signal, data signal, and a color
+for plotting purposes
+"""
 
 
 class Data:
+    """
+    Class for holding time series data
+
+    >>> from source.data.data import Data
+    >>> import numpy as np
+    >>> time = np.linspace(0, 1, 100)
+    >>> sig = np.random.random(len(time))
+    >>> data_signal = Data('My Signal', time, sig, 'red')
+    >>> print(len(data_signal))
+    100
+    >>> print(bool(data_signal))
+    True
+
+    Attributes:
+        name (str): Name of the signal
+
+        color (str): Color of signal when plotted
+    """
 
     def __init__(self, name, time, data, color):
+        """
+        Args:
+            name (str): Name of signal
+            time (iterable): time signal
+            data (iterable): data signal
+            color (str): color to plot with
+        """
         self._time = np.array(time)
         self._data = np.array(data)
         self.name = name
@@ -12,6 +44,7 @@ class Data:
 
     @property
     def time(self):
+        """np.ndarray: time array"""
         return self._time
 
     @time.setter
@@ -20,6 +53,7 @@ class Data:
 
     @property
     def data(self):
+        """np.ndarray: data array"""
         return self._data
 
     @data.setter
