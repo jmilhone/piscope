@@ -2,9 +2,9 @@ from __future__ import print_function, division
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QIcon
 import argparse
-import app.gui.app as MyApp
+import source.gui.piscope as MyApp
 #import logging
-from app.logging.piscope_logging import create_logger, log
+from source.logging.piscope_logging import create_logger, log
 
 
 if __name__ == "__main__":
@@ -39,5 +39,5 @@ if __name__ == "__main__":
 
     myapp = QApplication([])
     myapp.setWindowIcon(QIcon("Icons/application-wave.png"))
-    window = MyApp.MyWindow(args.config, args.shot_number)
+    window = MyApp.PiScope(args.config, args.shot_number)
     myapp.exec_()

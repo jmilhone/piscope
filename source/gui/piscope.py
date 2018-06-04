@@ -16,9 +16,7 @@ from distutils.util import strtobool
 import logging
 import MDSplus as mds
 from ..logging.piscope_logging import log
-import concurrent.futures
-import time
-from random import randint
+
 
 default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
                   '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
@@ -27,7 +25,7 @@ default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
 logger = logging.getLogger('pi-scope-logger')
 
 
-class MyWindow(QtWidgets.QMainWindow):
+class PiScope(QtWidgets.QMainWindow):
     """The PiScope Main Window
 
     Note: Auto-updating will only work if you are on the same subnet as your MDSplus server
@@ -47,7 +45,7 @@ class MyWindow(QtWidgets.QMainWindow):
              self.event_name (str): MDSplus event name to catch for auto-update.  Note this only works if you are on the same
                 subnet as your MDSplus server
         """
-        super(MyWindow, self).__init__()
+        super(PiScope, self).__init__()
         self.setWindowTitle("Big Red Ball PiScope")
         self.setWindowIcon(QtGui.QIcon("Icons/application-wave.png"))
         # Useful configuration things
