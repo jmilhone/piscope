@@ -83,7 +83,9 @@ def retrieve_signal(shot_number, signal_info, loc_name, signal_name, server, tre
     xstring = signal_info['x']
     ystring = signal_info['y']
     color = signal_info['color']
-
+    if isinstance(ystring, list):
+        ystring = ','.join(ystring)
+    #print(type(shot_number), type(server), type(tree), type(xstring), type(ystring), type(signal_name), type(color), ystring)
     data = _retrieve_signal(shot_number, server, tree, xstring, ystring,
                             signal_name, color)
     return data
@@ -136,7 +138,7 @@ def retrieve_data(connection, xstr, ystr, name, color):
             xstring = " ".join(xstring)
         else:
             xstring = xstr
-
+        print(ystring)
         data = connection.get(ystring)
         t = connection.get(xstring)
 
@@ -155,6 +157,9 @@ def retrieve_data(connection, xstr, ystr, name, color):
     except mds.TreeNODATA:
         logger.warning('TreeNODATA occurred in retrieve_data for %s' % name)
         return
+    except mds.TreeNNF:
+        logger.warning('TreeNNF occurred in retrieve_data for %s' % name)
+        return 
     except KeyError:
         logger.warning('KeyError occured in retrieve_data for %s' % name)
         return
