@@ -8,8 +8,10 @@ default_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
 
 
 def config_parser(filename):
-    config = ConfigObj(filename)
+    print(filename)
+    config = ConfigObj(filename,raise_errors=True)
     config = config.dict()
+
 
     col_setup = config['setup']['col']
     col_setup = [int(x) for x in col_setup]
@@ -42,6 +44,7 @@ def get_data_locs(config):
     for key in config.keys():
         if key.lower() != 'setup':
             data_locs[key] = config[key]
+            #print(config[key])
             parse_data_colors(config, key)
     return data_locs
 
@@ -60,6 +63,7 @@ def parse_data_colors(config, key):
     keys.sort()
     top_ignore = ['xlabel', 'ylabel', 'xlim', 'ylim', 'legend', 'noresample', 'xshare']
     j = 0
+    #print(keys)
     for k in keys:
         if k not in top_ignore:
             # this is a signal
@@ -67,4 +71,7 @@ def parse_data_colors(config, key):
             if 'color' not in local_config[k].keys():
                 config[key][k]['color'] = default_colors[j % 10]
                 j += 1
-
+            if isinstance(config[key][k].get('y', None), list):
+                print("I found you!")
+                config[key][k]['y'] = ','.join(config[key][k]['y'])
+                print(config[key][k]['y'])

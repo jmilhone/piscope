@@ -120,6 +120,7 @@ class PiScope(QtWidgets.QMainWindow):
         self.acquiring_data = False
 
         if config_file is not None:
+            print(config_file)
             self.load_configuration(config_file)
 
             if shot_number is None:

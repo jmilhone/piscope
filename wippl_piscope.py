@@ -5,7 +5,7 @@ import argparse
 import source.gui.piscope as MyApp
 #import logging
 from source.logging.piscope_logging import create_logger, log
-
+import os.path as path
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run a PiScope for the Big Red Ball.")
@@ -39,5 +39,8 @@ if __name__ == "__main__":
 
     myapp = QApplication([])
     myapp.setWindowIcon(QIcon("Icons/application-wave.png"))
+    print(args.config, type(args.config))
+    import os
+    print(os.path.dirname(os.path.realpath(__file__)))
     window = MyApp.PiScope(args.config, args.shot_number)
     myapp.exec_()
