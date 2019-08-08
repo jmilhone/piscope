@@ -4,6 +4,9 @@ The goal of this project is to replace jScope for looking at BRB plasma data.  T
 but is definitely usable!
 
 ## Screenshots
+![Main Window Gif](/source/images/piscope_animation.gif)*PiScope in Action looking at PCX Data*
+
+A simple demonstration of the PiScope app looking at data from the Plasma Couette Experiment.
 
 ![Main Window](/source/images/main_window.png)*The main window for BRB PiScope.*
 
