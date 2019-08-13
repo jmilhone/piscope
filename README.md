@@ -1,7 +1,6 @@
 # Welcome to the Big Red Ball PiScope!
 
-The goal of this project is to replace jScope for looking at BRB plasma data.  This is obviously a work in progress,
-but is definitely usable!
+The goal of this project is to replace jScope for looking at WiPPL plasma data. Most of the bugs have been worked out in the master branch. The port to a MVC structure is unfinished.
 
 ## Screenshots
 ![Main Window Gif](/source/images/piscope_animation.gif)*PiScope in Action looking at PCX Data*
@@ -10,10 +9,8 @@ A simple demonstration of the PiScope app looking at data from the Plasma Couett
 
 ![Main Window](/source/images/main_window.png)*The main window for BRB PiScope.*
 
-The main window is set up with rows and columns.  Currently, I do not allow a different number of rows in each column
-which is a feature of jScope.  Under File, you will find everything you need regarding opening, editing, and saving
+The main window is set up with rows and columns. Under File, you will find everything you need regarding opening, editing, and saving
 configuration files.  Under Options, you will find Auto Update, Share X-Axis, and Edit Downsampling.
-
 
 - Auto Update
     - This is for auto updating the shot number when the specified MDSplus Event is caught.  This feature will only
